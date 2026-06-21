@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enroll &mdash; Behavioral Biometric Authentication</title>
+<style>
+  /* ==========================================================================
+     DESIGN TOKENS
+     A self-contained dark, instrument-panel aesthetic built around the idea
+     of "reading a signal": deep near-black ground, a cyan biometric-scan
+     accent for live/active states, and an amber accent reserved for warnings
+     (flash "error" messages). Typography leans on system monospace for data
+     and labels (the vocabulary of telemetry) paired with system sans for
+     human-readable copy.
+     ========================================================================== */
+  :root {
+    --bg:        #0a0e13;
+    --panel:     #10151c;
+    --panel-2:   #141b24;
+    --line:      #1f2a35;
+    --text:      #e6edf3;
+    --text-dim:  #8b98a5;
+    --cyan:      #34e5c4;
+    --cyan-dim:  #1f8f7c;
+    --amber:     #ffb454;
+    --amber-dim: #7a5326;
+    --radius:    10px;
+    --font-sans: -apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100%;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(52, 229, 196, 0.05), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(52, 229, 196, 0.04), transparent 50%);
+  }
+
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Visible keyboard focus everywhere, per accessibility floor. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+
+  /* ==========================================================================
+     LAYOUT — split shell: telemetry panel (left) + enrollment form (right)
+     ========================================================================== */
+  .shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  /* ---- Left: ambient signal / telemetry panel (decorative, hidden on mobile) */
+  .signal-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 44px;
+    background: linear-gradient(180deg, var(--panel) 0%, #0c1118 100%);
+    border-right: 1px solid var(--line);
+    overflow: hidden;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+
+  .brand .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.6);
+    animation: pulse-dot 2.4s ease-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse-dot {
+    0%   { box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.5); }
+    70%  { box-shadow: 0 0 0 8px rgba(52, 229, 196, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(52, 229, 196, 0); }
+  }
+
+  .signal-copy h1 {
+    font-size: 30px;
+    line-height: 1.25;
+    margin: 0 0 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .signal-copy p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    max-width: 380px;
+    margin: 0;
+  }
+
+  /* Ambient telemetry readout — purely atmospheric, communicates "the system
+     is always listening" without claiming to show real enrollment data. */
+  .readout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 36px;
+  }
+
+  .readout-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .readout-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 22px;
+  }
+
+  .bars span {
+    flex: 1;
+    background: var(--cyan-dim);
+    border-radius: 1px;
+    animation: bar-pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes bar-pulse {
+    0%, 100% { height: 20%; background: var(--cyan-dim); }
+    50%      { height: 90%; background: var(--cyan); }
+  }
+
+  .signal-footer {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+  }
+
+  /* ---- Right: enrollment form */
+  .form-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .form-card h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .form-card .lede {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin: 0 0 28px;
+  }
+
+  /* ---- Flash messages */
+  .flashes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .flash {
+    font-size: 13.5px;
+    line-height: 1.5;
+    padding: 11px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+  }
+
+  .flash::before {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    flex-shrink: 0;
+  }
+
+  .flash-success {
+    background: rgba(52, 229, 196, 0.08);
+    border-color: var(--cyan-dim);
+    color: var(--cyan);
+  }
+  .flash-success::before { content: "[ok]"; }
+
+  .flash-error {
+    background: rgba(255, 180, 84, 0.08);
+    border-color: var(--amber-dim);
+    color: var(--amber);
+  }
+  .flash-error::before { content: "[!]"; }
+
+  .flash-message {
+    background: rgba(139, 152, 165, 0.08);
+    border-color: var(--line);
+    color: var(--text);
+  }
+  .flash-message::before { content: "[i]"; color: var(--text-dim); }
+
+  /* ---- Form fields */
+  .field {
+    margin-bottom: 18px;
+  }
+
+  .field label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 7px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 13px;
+    font-size: 14.5px;
+    font-family: var(--font-sans);
+    color: var(--text);
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .field input::placeholder { color: #5b6573; }
+
+  .field input:hover {
+    border-color: #2c3a47;
+  }
+
+  .field input:focus {
+    border-color: var(--cyan-dim);
+    background: #121821;
+  }
+
+  .field-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* ---- Signature element: live keystroke-cadence visualizer.
+     As the user types in the password field, the actual interval between
+     keystrokes is measured and rendered as a bar — a literal, working
+     preview of the behavioral signal this product is built to read. */
+  .cadence {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 26px;
+    margin-top: 9px;
+    padding: 0 1px;
+  }
+
+  .cadence-bar {
+    flex: 1;
+    min-width: 3px;
+    max-width: 7px;
+    height: 12%;
+    background: var(--cyan-dim);
+    border-radius: 1px;
+    transition: height 0.18s ease, background 0.18s ease;
+  }
+
+  .cadence-bar.active {
+    background: var(--cyan);
+  }
+
+  .cadence-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+
+  /* ---- Submit */
+  .submit {
+    width: 100%;
+    margin-top: 8px;
+    padding: 13px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--cyan-dim);
+    background: var(--cyan);
+    color: #06120f;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.05s ease;
+  }
+
+  .submit:hover { filter: brightness(1.08); }
+  .submit:active { transform: translateY(1px); }
+
+  .form-footer {
+    margin-top: 22px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* ==========================================================================
+     RESPONSIVE
+     ========================================================================== */
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: 1fr; }
+    .signal-panel { display: none; }
+    .form-panel { padding: 56px 22px; }
+  }
+
+  /* Respect reduced-motion preference: stop ambient pulse/bar animation. */
+  @media (prefers-reduced-motion: reduce) {
+    .brand .dot,
+    .bars span,
+    .cadence-bar {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ============================================================
+       LEFT PANEL — ambient telemetry, purely atmospheric
+       ============================================================ -->
+  <aside class="signal-panel" aria-hidden="true">
+    <div class="brand"><span class="dot"></span> BBA-PATP // SIGNAL MONITOR</div>
+
+    <div>
+      <div class="signal-copy">
+        <h1>Your identity is a rhythm, not just a password.</h1>
+        <p>
+          We continuously learn the way you type and move — cadence, pressure,
+          pace — to tell you apart from anyone trying to imitate you.
+        </p>
+      </div>
+
+      <div class="readout">
+        <div class="readout-row">
+          <span class="readout-label">Keystroke cadence</span>
+          <div class="bars">
+            <span style="animation-delay:0.0s"></span><span style="animation-delay:0.15s"></span>
+            <span style="animation-delay:0.3s"></span><span style="animation-delay:0.45s"></span>
+            <span style="animation-delay:0.6s"></span><span style="animation-delay:0.75s"></span>
+            <span style="animation-delay:0.9s"></span><span style="animation-delay:1.05s"></span>
+          </div>
+        </div>
+        <div class="readout-row">
+          <span class="readout-label">Pointer velocity</span>
+          <div class="bars">
+            <span style="animation-delay:0.2s"></span><span style="animation-delay:0.4s"></span>
+            <span style="animation-delay:0.1s"></span><span style="animation-delay:0.6s"></span>
+            <span style="animation-delay:0.3s"></span><span style="animation-delay:0.8s"></span>
+            <span style="animation-delay:0.5s"></span><span style="animation-delay:0.7s"></span>
+          </div>
+        </div>
+        <div class="readout-row">
+          <span class="readout-label">Click interval</span>
+          <div class="bars">
+            <span style="animation-delay:0.5s"></span><span style="animation-delay:0.1s"></span>
+            <span style="animation-delay:0.7s"></span><span style="animation-delay:0.25s"></span>
+            <span style="animation-delay:0.9s"></span><span style="animation-delay:0.4s"></span>
+            <span style="animation-delay:0.05s"></span><span style="animation-delay:0.6s"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="signal-footer">
+      NO TWO BEHAVIORAL SIGNALS ARE ALIKE — ENROLLMENT TAKES UNDER A MINUTE
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       RIGHT PANEL — registration form
+       ============================================================ -->
+  <main class="form-panel">
+    <div class="form-card">
+
+      <div class="eyebrow">New identity enrollment</div>
+      <h2>Create your account</h2>
+      <p class="lede">
+        Type your details the way you normally would. This first sample
+        becomes the baseline we compare every future login against.
+      </p>
+
+      <!-- ============================================================
+           FLASH MESSAGES
+           Renders any messages passed via Flask's flash(), grouped by
+           category ("success", "error", or default "message") so each
+           gets the matching visual treatment defined above.
+           ============================================================ -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flashes">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category if category in ['success', 'error'] else 'message' }}">
+                <span>{{ message }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- ============================================================
+           REGISTRATION FORM
+           Submits username, email, and password via POST to /register.
+           ============================================================ -->
+      <form method="POST" action="/register" novalidate>
+
+          <input type="hidden" id="hold_time" name="hold_time">
+          <input type="hidden" id="flight_time" name="flight_time">
+          <input type="hidden" id="typing_speed" name="typing_speed">
+
+        <div class="field">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="e.g. jordan_lee"
+            autocomplete="username"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Type naturally — we're already listening"
+            autocomplete="new-password"
+            required
+          >
+          <!-- Live cadence visualizer: bars react to real inter-keystroke
+               timing as the person types, demonstrating the product's core
+               behavioral signal directly inside the form. -->
+          <div class="cadence" id="cadence" aria-hidden="true"></div>
+          <div class="cadence-label">Live cadence preview</div>
+        </div>
+
+        <button type="submit" class="submit">Create account</button>
+      </form>
+
+      <div class="form-footer">
+        Already enrolled? <a href="/login">Sign in</a>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<script>
+  // ==========================================================================
+  // LIVE KEYSTROKE-CADENCE VISUALIZER
+  // Measures the real time interval between keystrokes in the password
+  // field and renders each interval as a bar height (shorter interval =
+  // taller bar = faster typing). This is a lightweight, client-side preview
+  // of the same kind of signal (keystroke timing) the backend's behavior
+  // profile is built from — purely illustrative, no data is sent anywhere.
+  // ==========================================================================
+  (function () {
+    const passwordInput = document.getElementById('password');
+    const cadenceTrack = document.getElementById('cadence');
+    const MAX_BARS = 28;
+    let lastKeyTime = null;
+    let bars = [];
+
+    function renderBars() {
+      cadenceTrack.innerHTML = '';
+      bars.forEach((heightPct) => {
+        const bar = document.createElement('span');
+        bar.className = 'cadence-bar active';
+        bar.style.height = heightPct + '%';
+        cadenceTrack.appendChild(bar);
+      });
+    }
+
+    passwordInput.addEventListener('keydown', function () {
+      const now = performance.now();
+
+      if (lastKeyTime !== null) {
+        const intervalMs = now - lastKeyTime;
+        // Map interval to a bar height: faster keystrokes (small interval)
+        // produce taller bars, clamped to a sensible visual range.
+        const clamped = Math.min(Math.max(intervalMs, 40), 500);
+        const heightPct = 100 - ((clamped - 40) / (500 - 40)) * 85;
+
+        bars.push(heightPct);
+        if (bars.length > MAX_BARS) {
+          bars.shift();
+        }
+        renderBars();
+      }
+
+      lastKeyTime = now;
+    });
+
+    passwordInput.addEventListener('blur', function () {
+      lastKeyTime = null;
+    });
+  })();
+  // ===============================
+// Behavioral Biometrics Collection
+// ===============================
+
+let keyDownTimes = {};
+let holdTimes = [];
+let flightTimes = [];
+
+let previousKeyTime = null;
+let startTypingTime = null;
+
+const passwordField = document.getElementById("password");
+
+passwordField.addEventListener("keydown", function(event){
+
+    const now = performance.now();
+
+    if(startTypingTime === null){
+        startTypingTime = now;
+    }
+
+    keyDownTimes[event.key] = now;
+
+    if(previousKeyTime !== null){
+        flightTimes.push(now - previousKeyTime);
+    }
+
+    previousKeyTime = now;
+});
+
+passwordField.addEventListener("keyup", function(event){
+
+    const now = performance.now();
+
+    if(keyDownTimes[event.key]){
+        holdTimes.push(
+            now - keyDownTimes[event.key]
+        );
+    }
+
+    updateBehaviorFields();
+});
+
+function average(arr){
+
+    if(arr.length === 0){
+        return 0;
+    }
+
+    return arr.reduce((a,b)=>a+b,0)/arr.length;
+}
+
+function updateBehaviorFields(){
+
+    const avgHold = average(holdTimes);
+
+    const avgFlight = average(flightTimes);
+
+    const typingSpeed =
+        holdTimes.length /
+        ((performance.now()-startTypingTime)/1000);
+
+    document.getElementById("hold_time").value =
+        avgHold.toFixed(2);
+
+    document.getElementById("flight_time").value =
+        avgFlight.toFixed(2);
+
+    document.getElementById("typing_speed").value =
+        typingSpeed.toFixed(2);
+}
+</script>
+
+</body>
+</html>

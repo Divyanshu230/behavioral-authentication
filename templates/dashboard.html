@@ -762,6 +762,19 @@
       <div class="card-sub">Similarity to enrolled baseline</div>
     </div>
 
+    <!-- ML Prediction -->
+    <div class="card">
+      <div class="card-label"><span class="card-icon"></span> ML Prediction</div>
+      <div class="card-value">
+        {% if ml_prediction | upper == 'NORMAL' %}
+          <span class="badge badge-low">{{ ml_prediction }}</span>
+        {% else %}
+          <span class="badge badge-high">{{ ml_prediction }}</span>
+        {% endif %}
+      </div>
+      <div class="card-sub">Predicted behavior pattern</div>
+    </div>
+
   </div>
 
   <!-- ==============================================================

@@ -12,6 +12,7 @@ Responsibilities of this module:
 
 Compatible with Python 3.12.
 """
+from ml.evaluate_model import predict_behavior
 from datetime import datetime
 import os
 import sqlite3
@@ -297,6 +298,17 @@ def create_app():
         session["user_id"] = user["id"]
         session["username"] = user["username"]
         session["behavior_score"] = round(score, 2)
+        ml_prediction = predict_behavior(
+            hold_time,
+            flight_time,
+            typing_speed
+        )
+
+        session["ml_prediction"] = (
+            "Normal"
+            if ml_prediction == 1
+            else "Anomaly"
+        )
         session["risk_level"] = risk
         session["hold_time"] = round(hold_time, 2)
         session["flight_time"] = round(flight_time, 2)
@@ -390,6 +402,7 @@ def create_app():
             "dashboard.html",
             username=session.get("username"),
             behavior_score=session.get("behavior_score"),
+            ml_prediction=session["ml_prediction"],
             risk_level=session.get("risk_level"),
             hold_time=session.get("hold_time"),
             flight_time=session.get("flight_time"),

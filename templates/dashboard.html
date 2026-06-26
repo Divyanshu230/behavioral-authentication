@@ -847,7 +847,10 @@
           <div class="soc-score">
             <span class="soc-score-value">{{ entry.behavior_score }}<span class="unit">%</span></span>
             <span class="soc-score-track">
-              <span class="soc-score-fill" style="width: {{ entry.behavior_score }}%;"></span>
+            <span
+                class="soc-score-fill"
+                data-score="{{ entry.behavior_score | default(0) }}">
+            </span>
             </span>
           </div>
         </td>
@@ -894,6 +897,12 @@
   </div>
 
 </main>
+<script>
+document.querySelectorAll(".soc-score-fill").forEach(bar => {
+    const score = parseFloat(bar.dataset.score) || 0;
+    bar.style.width = score + "%";
+});
+</script>
 
 </body>
 </html>

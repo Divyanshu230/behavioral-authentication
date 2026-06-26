@@ -39,3 +39,21 @@ CREATE TABLE IF NOT EXISTS behavior_profiles (
 -- Speed up lookups of a user's behavior profile(s).
 CREATE INDEX IF NOT EXISTS idx_behavior_profiles_user_id
     ON behavior_profiles (user_id);
+
+CREATE TABLE IF NOT EXISTS login_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    user_id INTEGER,
+
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    behavior_score REAL,
+
+    risk_level TEXT,
+
+    status TEXT,
+
+    ip_address TEXT,
+
+    FOREIGN KEY(user_id) REFERENCES users(id)
+);

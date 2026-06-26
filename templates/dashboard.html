@@ -609,6 +609,285 @@
       </div>
     </div>
   </div>
+  <!-- ============================================================================
+     RECENT LOGIN HISTORY — SOC-style event table
+     Drop this section into dashboard.html in place of the existing
+     "Recent Login History" markup. Uses only design tokens, fonts, and
+     badge classes already defined elsewhere in the dashboard
+     (--bg, --panel, --card, --line, --text, --text-dim, --cyan, --amber,
+     --rose, --font-sans, --font-mono, and .badge / .badge-low /
+     .badge-medium / .badge-high). No new tokens are introduced.
+
+     ASSUMPTION (no Flask variables changed, only how they're rendered):
+     a list called `login_history` is passed to the template, where each
+     item exposes `login_time`, `behavior_score`, `risk_level`, and
+     `status`. Rename the loop variable/keys below to match your actual
+     context if they differ — the surrounding HTML/CSS is unaffected.
+     ============================================================================ -->
+
+<h2 class="section-title">Recent Login History</h2>
+
+<div class="soc-table-wrap">
+  <table class="soc-table">
+    <thead>
+      <tr>
+        <th>Login Time</th>
+        <th>Behavior Score</th>
+        <th>Risk Level</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in login_history %}
+      <tr>
+        <!-- Login Time -->
+        <td class="soc-time" data-label="Login Time">{{ entry.login_time }}</td>
+
+        <!-- Behavior Score: rendered with a small inline meter so scores
+             are scannable at a glance, the way SOC tools (Defender,
+             CrowdStrike) render risk scores next to a magnitude bar. -->
+        <td data-label="Behavior Score">
+          <div class="soc-score">
+            <span class="soc-score-value">{{ entry.behavior_score }}<span class="unit">%</span></span>
+            <span class="soc-score-track">
+              <span class="soc-score-fill" style="width: {{ entry.behavior_score }}%;"></span>
+            </span>
+          </div>
+        </td>
+
+        <!-- Risk Level: same badge classes used elsewhere on the dashboard -->
+        <td data-label="Risk Level">
+          {% if entry.risk_level | upper == 'LOW' %}
+            <span class="badge badge-low">{{ entry.risk_level }}</span>
+          {% elif entry.risk_level | upper == 'MEDIUM' %}
+            <span class="badge badge-medium">{{ entry.risk_level }}</span>
+          {% else %}
+            <span class="badge badge-high">{{ entry.risk_level }}</span>
+          {% endif %}
+        </td>
+
+        <!-- Status -->
+        <td data-label="Status">
+          {% if entry.status | upper in ['SUCCESS', 'AUTHENTICATED'] %}
+            <span class="soc-status soc-status-ok">
+              <span class="soc-status-dot"></span>{{ entry.status }}
+            </span>
+          {% elif entry.status | upper in ['FLAGGED', 'PENDING'] %}
+            <span class="soc-status soc-status-warn">
+              <span class="soc-status-dot"></span>{{ entry.status }}
+            </span>
+          {% else %}
+            <span class="soc-status soc-status-fail">
+              <span class="soc-status-dot"></span>{{ entry.status }}
+            </span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4" class="soc-empty">No login activity recorded yet.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  /* ==========================================================================
+     RECENT LOGIN HISTORY — scoped styles
+     Reuses existing tokens only: --card, --line, --text, --text-dim, --cyan,
+     --cyan-dim, --amber, --amber-dim, --rose, --rose-dim, --font-sans,
+     --font-mono. No new color or spacing values are introduced.
+     ========================================================================== */
+
+  .soc-table-wrap {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow-x: auto;
+    margin-bottom: 40px;
+  }
+
+  .soc-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 640px; /* preserves column legibility; wrapper scrolls on small screens */
+  }
+
+  .soc-table thead th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    position: sticky;
+    top: 0;
+  }
+
+  .soc-table thead th:first-child { border-radius: 10px 0 0 0; }
+  .soc-table thead th:last-child  { border-radius: 0 10px 0 0; }
+
+  .soc-table tbody tr {
+    border-bottom: 1px solid var(--line);
+    transition: background 0.15s ease;
+  }
+
+  .soc-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .soc-table tbody tr:hover {
+    background: rgba(52, 229, 196, 0.04);
+  }
+
+  .soc-table td {
+    padding: 14px 20px;
+    font-size: 13.5px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .soc-time {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  /* ---- Behavior score: value + inline magnitude bar ---- */
+  .soc-score {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .soc-score-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    min-width: 48px;
+  }
+
+  .soc-score-value .unit {
+    color: var(--text-dim);
+    font-size: 11px;
+    margin-left: 1px;
+  }
+
+  .soc-score-track {
+    flex: 1;
+    max-width: 90px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  .soc-score-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+    border-radius: 999px;
+  }
+
+  /* ---- Status pill: dot + label, separate from risk badge so the two
+     signals (risk vs. outcome) stay visually distinct, as in
+     Okta/Cloudflare Zero Trust event logs. ---- */
+  .soc-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+
+  .soc-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .soc-status-ok {
+    color: var(--cyan);
+  }
+  .soc-status-ok .soc-status-dot {
+    background: var(--cyan);
+    box-shadow: 0 0 6px rgba(52, 229, 196, 0.6);
+  }
+
+  .soc-status-warn {
+    color: var(--amber);
+  }
+  .soc-status-warn .soc-status-dot {
+    background: var(--amber);
+    box-shadow: 0 0 6px rgba(255, 180, 84, 0.5);
+  }
+
+  .soc-status-fail {
+    color: var(--rose);
+  }
+  .soc-status-fail .soc-status-dot {
+    background: var(--rose);
+    box-shadow: 0 0 6px rgba(255, 107, 129, 0.5);
+  }
+
+  .soc-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    padding: 28px 20px;
+  }
+
+  /* ==========================================================================
+     RESPONSIVE
+     On narrow screens the table becomes a stacked card list — each row
+     turns into a labeled block instead of scrolling horizontally, which
+     keeps the SOC-log feel readable on mobile.
+     ========================================================================== */
+  @media (max-width: 640px) {
+    .soc-table thead { display: none; }
+
+    .soc-table, .soc-table tbody, .soc-table tr, .soc-table td {
+      display: block;
+      width: 100%;
+    }
+
+    .soc-table tbody tr {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .soc-table td {
+      padding: 6px 0;
+      border: none;
+    }
+
+    .soc-table td::before {
+      content: attr(data-label);
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 3px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .soc-table tbody tr {
+      transition: none !important;
+    }
+  }
+</style>
 
   <div class="footer-note">
     CONTINUOUS BEHAVIORAL MONITORING ACTIVE — SESSION SECURED BY BBA-PATP

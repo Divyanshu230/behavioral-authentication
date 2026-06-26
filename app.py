@@ -303,8 +303,36 @@ def create_app():
         session["typing_speed"] = round(typing_speed, 2)
         session["auth_status"] = "VERIFIED"
         session["login_timestamp"] = datetime.now().strftime(
-         "%d-%b-%Y %H:%M:%S"
+            "%d-%b-%Y %H:%M:%S"
         )
+        connection = get_db_connection()
+
+        try:
+            connection.execute(
+                """
+                INSERT INTO login_history
+                (
+                    user_id,
+                    behavior_score,
+                    risk_level,
+                    status,
+                    ip_address
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    user["id"],
+                    round(score, 2),
+                    risk,
+                    "SUCCESS",
+                    request.remote_addr
+                )
+            )
+
+            connection.commit()
+
+        finally:
+            connection.close()
 
         if score < 70:
             flash(
@@ -333,9 +361,30 @@ def create_app():
 
     @app.route("/dashboard")
     def dashboard():
+
         if "user_id" not in session:
-            flash("Please login first.", "error")
             return redirect(url_for("login"))
+
+        connection = get_db_connection()
+
+        try:
+            login_history = connection.execute(
+                """
+                SELECT
+                    login_time,
+                    behavior_score,
+                    risk_level,
+                    status
+                FROM login_history
+                WHERE user_id = ?
+                ORDER BY login_time DESC
+                LIMIT 10
+                """,
+                (session["user_id"],)
+            ).fetchall()
+
+        finally:
+            connection.close()
 
         return render_template(
             "dashboard.html",
@@ -346,7 +395,8 @@ def create_app():
             flight_time=session.get("flight_time"),
             typing_speed=session.get("typing_speed"),
             auth_status=session.get("auth_status"),
-            login_timestamp=session.get("login_timestamp")
+            login_timestamp=session.get("login_timestamp"),
+            login_history=login_history
         )
 
     return app

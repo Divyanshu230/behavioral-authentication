@@ -1,6 +1,6 @@
 import joblib
 
-from feature_extraction import extract_features
+from ml.feature_extraction import extract_features
 
 
 # ----------------------------------------

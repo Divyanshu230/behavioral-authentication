@@ -12,8 +12,11 @@ Responsibilities of this module:
 
 Compatible with Python 3.12.
 """
+from tkinter.tix import MAX
+
 from ml.evaluate_model import predict_behavior
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 import sqlite3
 
@@ -114,7 +117,7 @@ def create_app():
 
     @app.route("/")
     def index():
-        return "Behavioral Biometric Authentication System Running"
+        return "Behavioral Biometric Authentication System Running Successfully!"
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
@@ -320,20 +323,25 @@ def create_app():
         connection = get_db_connection()
 
         try:
+            login_time = datetime.now(
+                    ZoneInfo("Asia/Kolkata")
+                ).strftime("%Y-%m-%d %H:%M:%S")
             connection.execute(
                 """
                 INSERT INTO login_history
                 (
                     user_id,
+                    login_time,
                     behavior_score,
                     risk_level,
                     status,
                     ip_address
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
                     user["id"],
+                    login_time,
                     round(score, 2),
                     risk,
                     "SUCCESS",
@@ -380,6 +388,7 @@ def create_app():
         connection = get_db_connection()
 
         try:
+
             login_history = connection.execute(
                 """
                 SELECT
@@ -394,10 +403,25 @@ def create_app():
                 """,
                 (session["user_id"],)
             ).fetchall()
+            total_logins, average_score, highest_score, lowest_score = connection.execute(
+                """
+            SELECT
+            COUNT(*) AS total,
+            AVG(behavior_score),
+            MAX(behavior_score),
+            MIN(behavior_score)
+            FROM login_history
+            WHERE user_id = ?
+            """,
+            (session["user_id"],)
+            ).fetchone()
+            average_score = round(average_score, 2) if average_score else 0
+            highest_score = highest_score or 0
+            lowest_score = lowest_score or 0
 
         finally:
             connection.close()
-
+            
         return render_template(
             "dashboard.html",
             username=session.get("username"),
@@ -409,7 +433,11 @@ def create_app():
             typing_speed=session.get("typing_speed"),
             auth_status=session.get("auth_status"),
             login_timestamp=session.get("login_timestamp"),
-            login_history=login_history
+            login_history=login_history,
+            total_logins=total_logins,
+            average_score=average_score,
+            highest_score=highest_score,
+            lowest_score=lowest_score
         )
 
     return app

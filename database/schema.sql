@@ -57,3 +57,23 @@ CREATE TABLE IF NOT EXISTS login_history (
 
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
+
+SELECT COUNT(*) FROM login_history
+WHERE user_id = ?;
+
+SELECT ROUND(AVG(behavior_score),2)
+FROM login_history
+WHERE user_id = ?;
+
+SELECT MAX(behavior_score)
+FROM login_history
+WHERE user_id = ?;
+
+SELECT MIN(behavior_score)
+FROM login_history
+WHERE user_id = ?;
+
+SELECT risk_level, COUNT(*)
+FROM login_history
+WHERE user_id = ?
+GROUP BY risk_level;

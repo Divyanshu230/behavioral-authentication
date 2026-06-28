@@ -1,825 +1,991 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard &mdash; Smart Authentication System</title>
-<style>
-  /* ==========================================================================
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard &mdash; Smart Authentication System</title>
+    <style>
+      /* ==========================================================================
      DESIGN TOKENS
      Same design system as login.html / register.html: dark instrument-panel
      aesthetic, cyan accent for live/active states, amber for caution, a soft
      rose reserved for high-risk states. System monospace for data/labels,
      system sans for human-readable copy.
      ========================================================================== */
-  :root {
-    --bg:        #0a0e13;
-    --panel:     #10151c;
-    --panel-2:   #141b24;
-    --card:      #11161d;
-    --line:      #1f2a35;
-    --text:      #e6edf3;
-    --text-dim:  #8b98a5;
-    --cyan:      #34e5c4;
-    --cyan-dim:  #1f8f7c;
-    --amber:     #ffb454;
-    --amber-dim: #7a5326;
-    --rose:      #ff6b81;
-    --rose-dim:  #7a2e3a;
-    --font-sans: -apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial, sans-serif;
-    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
-  }
+      :root {
+        --bg: #0a0e13;
+        --panel: #10151c;
+        --panel-2: #141b24;
+        --card: #11161d;
+        --line: #1f2a35;
+        --text: #e6edf3;
+        --text-dim: #8b98a5;
+        --cyan: #34e5c4;
+        --cyan-dim: #1f8f7c;
+        --amber: #ffb454;
+        --amber-dim: #7a5326;
+        --rose: #ff6b81;
+        --rose-dim: #7a2e3a;
+        --font-sans:
+          -apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial,
+          sans-serif;
+        --font-mono:
+          ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo,
+          Consolas, monospace;
+      }
 
-  * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-sans);
-    min-height: 100%;
-  }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
+        min-height: 100%;
+      }
 
-  body {
-    background-image:
-      radial-gradient(circle at 12% 8%, rgba(52, 229, 196, 0.05), transparent 45%),
-      radial-gradient(circle at 88% 92%, rgba(52, 229, 196, 0.04), transparent 50%);
-  }
+      body {
+        background-image:
+          radial-gradient(
+            circle at 12% 8%,
+            rgba(52, 229, 196, 0.05),
+            transparent 45%
+          ),
+          radial-gradient(
+            circle at 88% 92%,
+            rgba(52, 229, 196, 0.04),
+            transparent 50%
+          );
+      }
 
-  a { color: var(--cyan); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+      a {
+        color: var(--cyan);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
 
-  a:focus-visible,
-  button:focus-visible {
-    outline: 2px solid var(--cyan);
-    outline-offset: 2px;
-  }
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 2px;
+      }
 
-  /* ==========================================================================
+      /* ==========================================================================
      TOP BAR
      ========================================================================== */
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 32px;
-    border-bottom: 1px solid var(--line);
-    background: var(--panel);
-  }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 32px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
 
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    letter-spacing: 0.08em;
-    color: var(--text-dim);
-  }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+      }
 
-  .brand .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--cyan);
-    box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.6);
-    animation: pulse-dot 2.4s ease-out infinite;
-    flex-shrink: 0;
-  }
+      .brand .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--cyan);
+        box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.6);
+        animation: pulse-dot 2.4s ease-out infinite;
+        flex-shrink: 0;
+      }
 
-  @keyframes pulse-dot {
-    0%   { box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.5); }
-    70%  { box-shadow: 0 0 0 8px rgba(52, 229, 196, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(52, 229, 196, 0); }
-  }
+      @keyframes pulse-dot {
+        0% {
+          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.5);
+        }
+        70% {
+          box-shadow: 0 0 0 8px rgba(52, 229, 196, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0);
+        }
+      }
 
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-  }
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
 
-  .session-pill {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--cyan);
-    background: rgba(52, 229, 196, 0.08);
-    border: 1px solid var(--cyan-dim);
-    border-radius: 999px;
-    padding: 6px 12px;
-    text-transform: uppercase;
-  }
+      .session-pill {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        color: var(--cyan);
+        background: rgba(52, 229, 196, 0.08);
+        border: 1px solid var(--cyan-dim);
+        border-radius: 999px;
+        padding: 6px 12px;
+        text-transform: uppercase;
+      }
 
-  .logout-btn {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.05em;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 8px 14px;
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
-  }
+      .logout-btn {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 14px;
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          color 0.15s ease,
+          background 0.15s ease;
+      }
 
-  .logout-btn:hover {
-    border-color: var(--rose-dim);
-    color: var(--rose);
-    background: rgba(255, 107, 129, 0.06);
-    text-decoration: none;
-  }
+      .logout-btn:hover {
+        border-color: var(--rose-dim);
+        color: var(--rose);
+        background: rgba(255, 107, 129, 0.06);
+        text-decoration: none;
+      }
 
-  /* ==========================================================================
+      /* ==========================================================================
      MAIN LAYOUT
      ========================================================================== */
-  main {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 40px 32px 60px;
-  }
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 40px 32px 60px;
+      }
 
-  /* ---- Hero: welcome + identity-match gauge ---- */
-  .hero {
-    display: grid;
-    grid-template-columns: 1fr 260px;
-    gap: 36px;
-    align-items: center;
-    padding-bottom: 36px;
-    border-bottom: 1px solid var(--line);
-    margin-bottom: 36px;
-  }
+      /* ---- Hero: welcome + identity-match gauge ---- */
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr 260px;
+        gap: 36px;
+        align-items: center;
+        padding-bottom: 36px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 36px;
+      }
 
-  .eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    color: var(--cyan);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        color: var(--cyan);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
 
-  .hero h1 {
-    font-size: 28px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin: 0 0 10px;
-  }
+      .hero h1 {
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin: 0 0 10px;
+      }
 
-  .hero h1 .uname {
-    color: var(--cyan);
-  }
+      .hero h1 .uname {
+        color: var(--cyan);
+      }
 
-  .hero p {
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.6;
-    margin: 0;
-    max-width: 480px;
-  }
+      .hero p {
+        font-size: 14px;
+        color: var(--text-dim);
+        line-height: 1.6;
+        margin: 0;
+        max-width: 480px;
+      }
 
-  .hero p .mono {
-    font-family: var(--font-mono);
-    color: var(--text);
-  }
+      .hero p .mono {
+        font-family: var(--font-mono);
+        color: var(--text);
+      }
 
-  /* ---- Gauge: ring built from a conic-gradient driven by --score ---- */
-  .gauge-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
+      /* ---- Gauge: ring built from a conic-gradient driven by --score ---- */
+      .gauge-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
 
-  .gauge {
-    --score: 0;
-    width: 168px;
-    height: 168px;
-    border-radius: 50%;
-    background: conic-gradient(
-      var(--cyan) calc(var(--score) * 3.6deg),
-      var(--line) calc(var(--score) * 3.6deg) 360deg
-    );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
+      .gauge {
+        --score: 0;
+        width: 168px;
+        height: 168px;
+        border-radius: 50%;
+        background: conic-gradient(
+          var(--cyan) calc(var(--score) * 3.6deg),
+          var(--line) calc(var(--score) * 3.6deg) 360deg
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
 
-  .gauge::before {
-    content: "";
-    position: absolute;
-    width: 132px;
-    height: 132px;
-    border-radius: 50%;
-    background: var(--panel);
-    border: 1px solid var(--line);
-  }
+      .gauge::before {
+        content: "";
+        position: absolute;
+        width: 132px;
+        height: 132px;
+        border-radius: 50%;
+        background: var(--panel);
+        border: 1px solid var(--line);
+      }
 
-  .gauge-value {
-    position: relative;
-    font-family: var(--font-mono);
-    font-size: 28px;
-    font-weight: 600;
-    color: var(--cyan);
-    z-index: 1;
-  }
+      .gauge-value {
+        position: relative;
+        font-family: var(--font-mono);
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--cyan);
+        z-index: 1;
+      }
 
-  .gauge-value sup {
-    font-size: 13px;
-    margin-left: 2px;
-  }
+      .gauge-value sup {
+        font-size: 13px;
+        margin-left: 2px;
+      }
 
-  .gauge-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.07em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    text-align: center;
-  }
+      .gauge-label {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.07em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        text-align: center;
+      }
 
-  /* ==========================================================================
+      /* ==========================================================================
      METRIC CARD GRID
      ========================================================================== */
-  .section-title {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin: 0 0 16px;
-  }
+      .section-title {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        margin: 0 0 16px;
+      }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 40px;
-  }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 40px;
+      }
 
-  .card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 20px;
-    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-  }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 20px;
+        transition:
+          transform 0.18s ease,
+          border-color 0.18s ease,
+          box-shadow 0.18s ease;
+      }
 
-  .card:hover {
-    transform: translateY(-3px);
-    border-color: var(--cyan-dim);
-    box-shadow: 0 10px 30px -12px rgba(52, 229, 196, 0.25);
-  }
+      .card:hover {
+        transform: translateY(-3px);
+        border-color: var(--cyan-dim);
+        box-shadow: 0 10px 30px -12px rgba(52, 229, 196, 0.25);
+      }
 
-  .card-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    letter-spacing: 0.07em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
+      .card-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.07em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
 
-  .card-icon {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--cyan-dim);
-    flex-shrink: 0;
-  }
+      .card-icon {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--cyan-dim);
+        flex-shrink: 0;
+      }
 
-  .card-value {
-    font-family: var(--font-mono);
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--text);
-    line-height: 1.2;
-  }
+      .card-value {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.2;
+      }
 
-  .card-value .unit {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-left: 4px;
-    font-weight: 400;
-  }
+      .card-value .unit {
+        font-size: 13px;
+        color: var(--text-dim);
+        margin-left: 4px;
+        font-weight: 400;
+      }
 
-  .card-sub {
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
+      .card-sub {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--text-dim);
+        line-height: 1.5;
+      }
 
-  /* ---- Status badges (Risk Level / Authentication Status) ---- */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 5px 11px;
-    border-radius: 999px;
-  }
+      /* ---- Status badges (Risk Level / Authentication Status) ---- */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        padding: 5px 11px;
+        border-radius: 999px;
+      }
 
-  .badge::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-  }
+      .badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
 
-  .badge-low {
-    color: var(--cyan);
-    background: rgba(52, 229, 196, 0.08);
-    border: 1px solid var(--cyan-dim);
-  }
-  .badge-low::before { background: var(--cyan); }
+      .badge-low {
+        color: var(--cyan);
+        background: rgba(52, 229, 196, 0.08);
+        border: 1px solid var(--cyan-dim);
+      }
+      .badge-low::before {
+        background: var(--cyan);
+      }
 
-  .badge-medium {
-    color: var(--amber);
-    background: rgba(255, 180, 84, 0.08);
-    border: 1px solid var(--amber-dim);
-  }
-  .badge-medium::before { background: var(--amber); }
+      .badge-medium {
+        color: var(--amber);
+        background: rgba(255, 180, 84, 0.08);
+        border: 1px solid var(--amber-dim);
+      }
+      .badge-medium::before {
+        background: var(--amber);
+      }
 
-  .badge-high {
-    color: var(--rose);
-    background: rgba(255, 107, 129, 0.08);
-    border: 1px solid var(--rose-dim);
-  }
-  .badge-high::before { background: var(--rose); }
+      .badge-high {
+        color: var(--rose);
+        background: rgba(255, 107, 129, 0.08);
+        border: 1px solid var(--rose-dim);
+      }
+      .badge-high::before {
+        background: var(--rose);
+      }
 
-  /* ---- Ambient telemetry strip (decorative, echoes login/register bars) --- */
-  .telemetry {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 22px 24px;
-  }
+      /* ---- Ambient telemetry strip (decorative, echoes login/register bars) --- */
+      .telemetry {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 22px 24px;
+      }
 
-  .telemetry-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 18px;
-  }
+      .telemetry-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 18px;
+      }
 
-  .readout {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+      .readout {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
 
-  .readout-row {
-    display: grid;
-    grid-template-columns: 150px 1fr;
-    align-items: center;
-    gap: 14px;
-  }
+      .readout-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        align-items: center;
+        gap: 14px;
+      }
 
-  .readout-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.07em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-  }
+      .readout-label {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.07em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+      }
 
-  .bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 3px;
-    height: 20px;
-  }
+      .bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 20px;
+      }
 
-  .bars span {
-    flex: 1;
-    background: var(--cyan-dim);
-    border-radius: 1px;
-    animation: bar-pulse 1.8s ease-in-out infinite;
-  }
+      .bars span {
+        flex: 1;
+        background: var(--cyan-dim);
+        border-radius: 1px;
+        animation: bar-pulse 1.8s ease-in-out infinite;
+      }
 
-  @keyframes bar-pulse {
-    0%, 100% { height: 20%; background: var(--cyan-dim); }
-    50%      { height: 90%; background: var(--cyan); }
-  }
+      @keyframes bar-pulse {
+        0%,
+        100% {
+          height: 20%;
+          background: var(--cyan-dim);
+        }
+        50% {
+          height: 90%;
+          background: var(--cyan);
+        }
+      }
 
-  .footer-note {
-    margin-top: 28px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    color: var(--text-dim);
-    text-align: center;
-  }
+      .footer-note {
+        margin-top: 28px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        color: var(--text-dim);
+        text-align: center;
+      }
 
-  /* ==========================================================================
+      /* ==========================================================================
      RESPONSIVE
      ========================================================================== */
-  @media (max-width: 980px) {
-    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
 
-  @media (max-width: 760px) {
-    .hero {
-      grid-template-columns: 1fr;
-      text-align: center;
-    }
-    .hero p { margin: 0 auto; }
-    .topbar { padding: 16px 20px; }
-    main { padding: 28px 18px 48px; }
-  }
+      @media (max-width: 760px) {
+        .hero {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+        .hero p {
+          margin: 0 auto;
+        }
+        .topbar {
+          padding: 16px 20px;
+        }
+        main {
+          padding: 28px 18px 48px;
+        }
+      }
 
-  @media (max-width: 520px) {
-    .grid { grid-template-columns: 1fr; }
-    .readout-row { grid-template-columns: 110px 1fr; }
-  }
+      @media (max-width: 520px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .readout-row {
+          grid-template-columns: 110px 1fr;
+        }
+      }
 
-  @media (prefers-reduced-motion: reduce) {
-    .brand .dot,
-    .bars span {
-      animation: none !important;
-    }
-    .card {
-      transition: none !important;
-    }
-  }
+      @media (prefers-reduced-motion: reduce) {
+        .brand .dot,
+        .bars span {
+          animation: none !important;
+        }
+        .card {
+          transition: none !important;
+        }
+      }
 
-  /* ==========================================================================
+      /* ==========================================================================
      RECENT LOGIN HISTORY — scoped styles
      Reuses existing tokens only: --card, --line, --text, --text-dim, --cyan,
      --cyan-dim, --amber, --amber-dim, --rose, --rose-dim, --font-sans,
      --font-mono. No new color or spacing values are introduced.
      ========================================================================== */
 
-  .soc-table-wrap {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    overflow-x: auto;
-    margin-bottom: 40px;
-  }
+      .soc-table-wrap {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow-x: auto;
+        margin-bottom: 40px;
+      }
 
-  .soc-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 640px; /* preserves column legibility; wrapper scrolls on small screens */
-  }
+      .soc-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px; /* preserves column legibility; wrapper scrolls on small screens */
+      }
 
-  .soc-table thead th {
-    text-align: left;
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--line);
-    background: var(--panel);
-    position: sticky;
-    top: 0;
-  }
+      .soc-table thead th {
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+        position: sticky;
+        top: 0;
+      }
 
-  .soc-table thead th:first-child { border-radius: 10px 0 0 0; }
-  .soc-table thead th:last-child  { border-radius: 0 10px 0 0; }
+      .soc-table thead th:first-child {
+        border-radius: 10px 0 0 0;
+      }
+      .soc-table thead th:last-child {
+        border-radius: 0 10px 0 0;
+      }
 
-  .soc-table tbody tr {
-    border-bottom: 1px solid var(--line);
-    transition: background 0.15s ease;
-  }
+      .soc-table tbody tr {
+        border-bottom: 1px solid var(--line);
+        transition: background 0.15s ease;
+      }
 
-  .soc-table tbody tr:last-child {
-    border-bottom: none;
-  }
+      .soc-table tbody tr:last-child {
+        border-bottom: none;
+      }
 
-  .soc-table tbody tr:hover {
-    background: rgba(52, 229, 196, 0.04);
-  }
+      .soc-table tbody tr:hover {
+        background: rgba(52, 229, 196, 0.04);
+      }
 
-  .soc-table td {
-    padding: 14px 20px;
-    font-size: 13.5px;
-    color: var(--text);
-    vertical-align: middle;
-  }
+      .soc-table td {
+        padding: 14px 20px;
+        font-size: 13.5px;
+        color: var(--text);
+        vertical-align: middle;
+      }
 
-  .soc-time {
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    color: var(--text-dim);
-    white-space: nowrap;
-  }
+      .soc-time {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        color: var(--text-dim);
+        white-space: nowrap;
+      }
 
-  /* ---- Behavior score: value + inline magnitude bar ---- */
-  .soc-score {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+      /* ---- Behavior score: value + inline magnitude bar ---- */
+      .soc-score {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-  .soc-score-value {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text);
-    min-width: 48px;
-  }
+      .soc-score-value {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--text);
+        min-width: 48px;
+      }
 
-  .soc-score-value .unit {
-    color: var(--text-dim);
-    font-size: 11px;
-    margin-left: 1px;
-  }
+      .soc-score-value .unit {
+        color: var(--text-dim);
+        font-size: 11px;
+        margin-left: 1px;
+      }
 
-  .soc-score-track {
-    flex: 1;
-    max-width: 90px;
-    height: 5px;
-    border-radius: 999px;
-    background: var(--line);
-    overflow: hidden;
-    display: inline-block;
-  }
+      .soc-score-track {
+        flex: 1;
+        max-width: 90px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--line);
+        overflow: hidden;
+        display: inline-block;
+      }
 
-  .soc-score-fill {
-    display: block;
-    height: 100%;
-    background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
-    border-radius: 999px;
-  }
+      .soc-score-fill {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+        border-radius: 999px;
+      }
 
-  /* ---- Status pill: dot + label, separate from risk badge so the two
+      /* ---- Status pill: dot + label, separate from risk badge so the two
      signals (risk vs. outcome) stay visually distinct, as in
      Okta/Cloudflare Zero Trust event logs. ---- */
-  .soc-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    letter-spacing: 0.02em;
-  }
+      .soc-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        letter-spacing: 0.02em;
+      }
 
-  .soc-status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+      .soc-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
 
-  .soc-status-ok {
-    color: var(--cyan);
-  }
-  .soc-status-ok .soc-status-dot {
-    background: var(--cyan);
-    box-shadow: 0 0 6px rgba(52, 229, 196, 0.6);
-  }
+      .soc-status-ok {
+        color: var(--cyan);
+      }
+      .soc-status-ok .soc-status-dot {
+        background: var(--cyan);
+        box-shadow: 0 0 6px rgba(52, 229, 196, 0.6);
+      }
 
-  .soc-status-warn {
-    color: var(--amber);
-  }
-  .soc-status-warn .soc-status-dot {
-    background: var(--amber);
-    box-shadow: 0 0 6px rgba(255, 180, 84, 0.5);
-  }
+      .soc-status-warn {
+        color: var(--amber);
+      }
+      .soc-status-warn .soc-status-dot {
+        background: var(--amber);
+        box-shadow: 0 0 6px rgba(255, 180, 84, 0.5);
+      }
 
-  .soc-status-fail {
-    color: var(--rose);
-  }
-  .soc-status-fail .soc-status-dot {
-    background: var(--rose);
-    box-shadow: 0 0 6px rgba(255, 107, 129, 0.5);
-  }
+      .soc-status-fail {
+        color: var(--rose);
+      }
+      .soc-status-fail .soc-status-dot {
+        background: var(--rose);
+        box-shadow: 0 0 6px rgba(255, 107, 129, 0.5);
+      }
 
-  .soc-empty {
-    text-align: center;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    padding: 28px 20px;
-  }
+      .soc-empty {
+        text-align: center;
+        color: var(--text-dim);
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        padding: 28px 20px;
+      }
 
-  /* ==========================================================================
+      /* ==========================================================================
      RESPONSIVE
      On narrow screens the table becomes a stacked card list — each row
      turns into a labeled block instead of scrolling horizontally, which
      keeps the SOC-log feel readable on mobile.
      ========================================================================== */
-  @media (max-width: 640px) {
-    .soc-table thead { display: none; }
+      @media (max-width: 640px) {
+        .soc-table thead {
+          display: none;
+        }
 
-    .soc-table, .soc-table tbody, .soc-table tr, .soc-table td {
-      display: block;
-      width: 100%;
-    }
+        .soc-table,
+        .soc-table tbody,
+        .soc-table tr,
+        .soc-table td {
+          display: block;
+          width: 100%;
+        }
 
-    .soc-table tbody tr {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--line);
-    }
+        .soc-table tbody tr {
+          padding: 14px 16px;
+          border-bottom: 1px solid var(--line);
+        }
 
-    .soc-table td {
-      padding: 6px 0;
-      border: none;
-    }
+        .soc-table td {
+          padding: 6px 0;
+          border: none;
+        }
 
-    .soc-table td::before {
-      content: attr(data-label);
-      display: block;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 3px;
-    }
-  }
+        .soc-table td::before {
+          content: attr(data-label);
+          display: block;
+          font-family: var(--font-mono);
+          font-size: 10px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--text-dim);
+          margin-bottom: 3px;
+        }
+      }
 
-  @media (prefers-reduced-motion: reduce) {
-    .soc-table tbody tr {
-      transition: none !important;
-    }
-  }
+      @media (prefers-reduced-motion: reduce) {
+        .soc-table tbody tr {
+          transition: none !important;
+        }
+      }
+      /* ==========================
+      Dashboard Analytics Cards
+      ========================== */
 
-</style>
-</head>
-<body>
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin: 30px 0;
+      }
 
-<!-- ==============================================================
+      .analytics-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 24px;
+        transition: 0.25s;
+      }
+
+      .analytics-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--cyan);
+        box-shadow: 0 0 18px rgba(64, 224, 208, 0.15);
+      }
+
+      .analytics-title {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--text-dim);
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        font-family: var(--font-mono);
+      }
+
+      .analytics-card h2 {
+        margin: 0;
+        font-size: 24px;
+        color: white;
+        font-family: var(--font-mono);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ==============================================================
      TOP BAR
      ============================================================== -->
-<header class="topbar">
-  <div class="brand"><span class="dot"></span> BBA-PATP // SIGNAL MONITOR</div>
-  <div class="topbar-right">
-    <span class="session-pill">Session active</span>
-    <a class="logout-btn" href="/logout">Logout</a>
-  </div>
-</header>
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot"></span> BBA-PATP // SIGNAL MONITOR
+      </div>
+      <div class="topbar-right">
+        <span class="session-pill">Session active</span>
+        <a class="logout-btn" href="/logout">Logout</a>
+      </div>
+    </header>
 
-<main>
-
-  <!-- ==============================================================
+    <main>
+      <!-- ==============================================================
        HERO — welcome message + behavior match gauge
        Jinja placeholders: {{ username }}, {{ behavior_score }}
        ============================================================== -->
-  <section class="hero">
-    <div>
-      <div class="eyebrow">Session verified</div>
-      <h1>Welcome back, <span class="uname">{{ username }}</span></h1>
-      <p>
-        Your behavioral signal was checked against your enrolled baseline
-        at <span class="mono">{{ login_timestamp }}</span>. Continuous
-        monitoring stays active for the rest of this session.
-      </p>
-    </div>
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Session verified</div>
+          <h1>Welcome back, <span class="uname">{{ username }}</span></h1>
+          <p>
+            Your behavioral signal was checked against your enrolled baseline at
+            <span class="mono">{{ login_timestamp }}</span>. Continuous
+            monitoring stays active for the rest of this session.
+          </p>
+        </div>
 
-    <div class="gauge-wrap">
-      <div class="gauge" style="--score: {{ behavior_score }};">
-        <span class="gauge-value">{{ behavior_score }}<sup>%</sup></span>
-      </div>
-      <span class="gauge-label">Behavior Match Score</span>
-    </div>
-  </section>
+        <div class="gauge-wrap">
+          <div class="gauge" style="--score: {{ behavior_score }};">
+            <span class="gauge-value">{{ behavior_score }}<sup>%</sup></span>
+          </div>
+          <span class="gauge-label">Behavior Match Score</span>
+        </div>
+      </section>
 
-  <!-- ==============================================================
+      <!-- ==============================================================
        METRIC CARDS
        Jinja placeholders: {{ risk_level }}, {{ hold_time }},
        {{ flight_time }}, {{ typing_speed }}
        ============================================================== -->
-  <h2 class="section-title">Authentication Telemetry</h2>
-  <div class="grid">
+      <h2 class="section-title">Authentication Telemetry</h2>
+      <div class="grid">
+        <!-- Username -->
+        <div class="card">
+          <div class="card-label"><span class="card-icon"></span> Username</div>
+          <div class="card-value">{{ username }}</div>
+          <div class="card-sub">Enrolled identity</div>
+        </div>
 
-    <!-- Username -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> Username</div>
-      <div class="card-value">{{ username }}</div>
-      <div class="card-sub">Enrolled identity</div>
-    </div>
+        <!-- Authentication Status -->
+        <div class="card">
+          <div class="card-label">
+            <span class="card-icon"></span> Authentication Status
+          </div>
+          <div class="card-value">
+            <span class="badge badge-low">{{ auth_status }}</span>
+          </div>
+          <div class="card-sub">Result of this login attempt</div>
+        </div>
 
-    <!-- Authentication Status -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> Authentication Status</div>
-      <div class="card-value">
-        <span class="badge badge-low">{{ auth_status }}</span>
+        <!-- Risk Level -->
+        <div class="card">
+          <div class="card-label">
+            <span class="card-icon"></span> Risk Level
+          </div>
+          <div class="card-value">
+            {% if risk_level | upper == 'LOW' %}
+            <span class="badge badge-low">{{ risk_level }}</span>
+            {% elif risk_level | upper == 'MEDIUM' %}
+            <span class="badge badge-medium">{{ risk_level }}</span>
+            {% else %}
+            <span class="badge badge-high">{{ risk_level }}</span>
+            {% endif %}
+          </div>
+          <div class="card-sub">Composite behavioral risk score</div>
+        </div>
+
+        <!-- Login Timestamp -->
+        <div class="card">
+          <div class="card-label">
+            <span class="card-icon"></span> Login Timestamp
+          </div>
+          <div class="card-value">{{ login_timestamp }}</div>
+          <div class="card-sub">Server-side login time</div>
+        </div>
+
+        <!-- Hold Time -->
+        <div class="card">
+          <div class="card-label">
+            <span class="card-icon"></span> Hold Time
+          </div>
+          <div class="card-value">
+            {{ hold_time }}<span class="unit">ms</span>
+          </div>
+          <div class="card-sub">Avg. key press duration</div>
+        </div>
+
+        <!-- Flight Time -->
+        <div class="card">
+          <div class="card-label">
+            <span class="card-icon"></span> Flight Time
+          </div>
+          <div class="card-value">
+            {{ flight_time }}<span class="unit">ms</span>
+          </div>
+          <div class="card-sub">Avg. time between keystrokes</div>
+        </div>
+
+        <!-- Typing Speed -->
+        <div class="card">
+          <div class="card-label">
+            <span class="card-icon"></span> Typing Speed
+          </div>
+          <div class="card-value">
+            {{ typing_speed }}<span class="unit">keys/s</span>
+          </div>
+          <div class="card-sub">Avg. typing rate this session</div>
+        </div>
+
+        <!-- Behavior Match Score (numeric card, mirrors the gauge above) -->
+        <div class="card">
+          <div class="card-label">
+            <span class="card-icon"></span> Behavior Match Score
+          </div>
+          <div class="card-value">
+            {{ behavior_score }}<span class="unit">%</span>
+          </div>
+          <div class="card-sub">Similarity to enrolled baseline</div>
+        </div>
+
+        <!-- ML Prediction -->
+        <div class="card">
+          <div class="card-label">
+            <span class="card-icon"></span> ML Prediction
+          </div>
+          <div class="card-value">
+            {% if ml_prediction | upper == 'NORMAL' %}
+            <span class="badge badge-low">{{ ml_prediction }}</span>
+            {% else %}
+            <span class="badge badge-high">{{ ml_prediction }}</span>
+            {% endif %}
+          </div>
+          <div class="card-sub">Predicted behavior pattern</div>
+        </div>
       </div>
-      <div class="card-sub">Result of this login attempt</div>
-    </div>
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <span class="analytics-title">TOTAL LOGINS</span>
+          <h2>{{ total_logins }}</h2>
+        </div>
 
-    <!-- Risk Level -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> Risk Level</div>
-      <div class="card-value">
-        {% if risk_level | upper == 'LOW' %}
-          <span class="badge badge-low">{{ risk_level }}</span>
-        {% elif risk_level | upper == 'MEDIUM' %}
-          <span class="badge badge-medium">{{ risk_level }}</span>
-        {% else %}
-          <span class="badge badge-high">{{ risk_level }}</span>
-        {% endif %}
+        <div class="analytics-card">
+          <span class="analytics-title">AVERAGE SCORE</span>
+          <h2>{{ average_score }}%</h2>
+        </div>
+
+        <div class="analytics-card">
+          <span class="analytics-title">HIGHEST SCORE</span>
+          <h2>{{ highest_score }}%</h2>
+        </div>
+
+        <div class="analytics-card">
+          <span class="analytics-title">LOWEST SCORE</span>
+          <h2>{{ lowest_score }}%</h2>
+        </div>
       </div>
-      <div class="card-sub">Composite behavioral risk score</div>
-    </div>
 
-    <!-- Login Timestamp -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> Login Timestamp</div>
-      <div class="card-value">{{ login_timestamp }}</div>
-      <div class="card-sub">Server-side login time</div>
-    </div>
-
-    <!-- Hold Time -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> Hold Time</div>
-      <div class="card-value">{{ hold_time }}<span class="unit">ms</span></div>
-      <div class="card-sub">Avg. key press duration</div>
-    </div>
-
-    <!-- Flight Time -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> Flight Time</div>
-      <div class="card-value">{{ flight_time }}<span class="unit">ms</span></div>
-      <div class="card-sub">Avg. time between keystrokes</div>
-    </div>
-
-    <!-- Typing Speed -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> Typing Speed</div>
-      <div class="card-value">{{ typing_speed }}<span class="unit">keys/s</span></div>
-      <div class="card-sub">Avg. typing rate this session</div>
-    </div>
-
-    <!-- Behavior Match Score (numeric card, mirrors the gauge above) -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> Behavior Match Score</div>
-      <div class="card-value">{{ behavior_score }}<span class="unit">%</span></div>
-      <div class="card-sub">Similarity to enrolled baseline</div>
-    </div>
-
-    <!-- ML Prediction -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon"></span> ML Prediction</div>
-      <div class="card-value">
-        {% if ml_prediction | upper == 'NORMAL' %}
-          <span class="badge badge-low">{{ ml_prediction }}</span>
-        {% else %}
-          <span class="badge badge-high">{{ ml_prediction }}</span>
-        {% endif %}
-      </div>
-      <div class="card-sub">Predicted behavior pattern</div>
-    </div>
-
-  </div>
-
-  <!-- ==============================================================
+      <!-- ==============================================================
        AMBIENT TELEMETRY STRIP (decorative, echoes login/register motif)
        ============================================================== -->
-  <div class="telemetry">
-    <div class="telemetry-header">
-      <span class="section-title" style="margin:0;">Live Signal Monitor</span>
-      <span class="session-pill">Listening</span>
-    </div>
-    <div class="readout">
-      <div class="readout-row">
-        <span class="readout-label">Keystroke cadence</span>
-        <div class="bars">
-          <span style="animation-delay:0.0s"></span><span style="animation-delay:0.15s"></span>
-          <span style="animation-delay:0.3s"></span><span style="animation-delay:0.45s"></span>
-          <span style="animation-delay:0.6s"></span><span style="animation-delay:0.75s"></span>
-          <span style="animation-delay:0.9s"></span><span style="animation-delay:1.05s"></span>
-          <span style="animation-delay:1.2s"></span><span style="animation-delay:1.35s"></span>
+      <div class="telemetry">
+        <div class="telemetry-header">
+          <span class="section-title" style="margin: 0"
+            >Live Signal Monitor</span
+          >
+          <span class="session-pill">Listening</span>
+        </div>
+        <div class="readout">
+          <div class="readout-row">
+            <span class="readout-label">Keystroke cadence</span>
+            <div class="bars">
+              <span style="animation-delay: 0s"></span
+              ><span style="animation-delay: 0.15s"></span>
+              <span style="animation-delay: 0.3s"></span
+              ><span style="animation-delay: 0.45s"></span>
+              <span style="animation-delay: 0.6s"></span
+              ><span style="animation-delay: 0.75s"></span>
+              <span style="animation-delay: 0.9s"></span
+              ><span style="animation-delay: 1.05s"></span>
+              <span style="animation-delay: 1.2s"></span
+              ><span style="animation-delay: 1.35s"></span>
+            </div>
+          </div>
+          <div class="readout-row">
+            <span class="readout-label">Pointer velocity</span>
+            <div class="bars">
+              <span style="animation-delay: 0.2s"></span
+              ><span style="animation-delay: 0.4s"></span>
+              <span style="animation-delay: 0.1s"></span
+              ><span style="animation-delay: 0.6s"></span>
+              <span style="animation-delay: 0.3s"></span
+              ><span style="animation-delay: 0.8s"></span>
+              <span style="animation-delay: 0.5s"></span
+              ><span style="animation-delay: 0.7s"></span>
+              <span style="animation-delay: 0.9s"></span
+              ><span style="animation-delay: 1.1s"></span>
+            </div>
+          </div>
+          <div class="readout-row">
+            <span class="readout-label">Click interval</span>
+            <div class="bars">
+              <span style="animation-delay: 0.5s"></span
+              ><span style="animation-delay: 0.1s"></span>
+              <span style="animation-delay: 0.7s"></span
+              ><span style="animation-delay: 0.25s"></span>
+              <span style="animation-delay: 0.9s"></span
+              ><span style="animation-delay: 0.4s"></span>
+              <span style="animation-delay: 0.05s"></span
+              ><span style="animation-delay: 0.6s"></span>
+              <span style="animation-delay: 0.8s"></span
+              ><span style="animation-delay: 0.3s"></span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="readout-row">
-        <span class="readout-label">Pointer velocity</span>
-        <div class="bars">
-          <span style="animation-delay:0.2s"></span><span style="animation-delay:0.4s"></span>
-          <span style="animation-delay:0.1s"></span><span style="animation-delay:0.6s"></span>
-          <span style="animation-delay:0.3s"></span><span style="animation-delay:0.8s"></span>
-          <span style="animation-delay:0.5s"></span><span style="animation-delay:0.7s"></span>
-          <span style="animation-delay:0.9s"></span><span style="animation-delay:1.1s"></span>
-        </div>
-      </div>
-      <div class="readout-row">
-        <span class="readout-label">Click interval</span>
-        <div class="bars">
-          <span style="animation-delay:0.5s"></span><span style="animation-delay:0.1s"></span>
-          <span style="animation-delay:0.7s"></span><span style="animation-delay:0.25s"></span>
-          <span style="animation-delay:0.9s"></span><span style="animation-delay:0.4s"></span>
-          <span style="animation-delay:0.05s"></span><span style="animation-delay:0.6s"></span>
-          <span style="animation-delay:0.8s"></span><span style="animation-delay:0.3s"></span>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-<!-- ============================================================================
+
+      <!-- ============================================================================
      RECENT LOGIN HISTORY — SOC-style event table
      Drop this section into dashboard.html in place of the existing
      "Recent Login History" markup. Uses only design tokens, fonts, and
@@ -835,87 +1001,92 @@
      context if they differ — the surrounding HTML/CSS is unaffected.
      ============================================================================ -->
 
-<h2 class="section-title">Recent Login History</h2>
+      <h2 class="section-title">Recent Login History</h2>
 
-<div class="soc-table-wrap">
-  <table class="soc-table">
-    <thead>
-      <tr>
-        <th>Login Time</th>
-        <th>Behavior Score</th>
-        <th>Risk Level</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for entry in login_history %}
-      <tr>
-        <!-- Login Time -->
-        <td class="soc-time" data-label="Login Time">{{ entry.login_time }}</td>
+      <div class="soc-table-wrap">
+        <table class="soc-table">
+          <thead>
+            <tr>
+              <th>Login Time</th>
+              <th>Behavior Score</th>
+              <th>Risk Level</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in login_history %}
+            <tr>
+              <!-- Login Time -->
+              <td class="soc-time" data-label="Login Time">
+                {{ entry.login_time }}
+              </td>
 
-        <!-- Behavior Score: rendered with a small inline meter so scores
+              <!-- Behavior Score: rendered with a small inline meter so scores
              are scannable at a glance, the way SOC tools (Defender,
              CrowdStrike) render risk scores next to a magnitude bar. -->
-        <td data-label="Behavior Score">
-          <div class="soc-score">
-            <span class="soc-score-value">{{ entry.behavior_score }}<span class="unit">%</span></span>
-            <span class="soc-score-track">
-            <span
-                class="soc-score-fill"
-                data-score="{{ entry.behavior_score | default(0) }}">
-            </span>
-            </span>
-          </div>
-        </td>
+              <td data-label="Behavior Score">
+                <div class="soc-score">
+                  <span class="soc-score-value"
+                    >{{ entry.behavior_score }}<span class="unit">%</span></span
+                  >
+                  <span class="soc-score-track">
+                    <span
+                      class="soc-score-fill"
+                      data-score="{{ entry.behavior_score | default(0) }}"
+                    >
+                    </span>
+                  </span>
+                </div>
+              </td>
 
-        <!-- Risk Level: same badge classes used elsewhere on the dashboard -->
-        <td data-label="Risk Level">
-          {% if entry.risk_level | upper == 'LOW' %}
-            <span class="badge badge-low">{{ entry.risk_level }}</span>
-          {% elif entry.risk_level | upper == 'MEDIUM' %}
-            <span class="badge badge-medium">{{ entry.risk_level }}</span>
-          {% else %}
-            <span class="badge badge-high">{{ entry.risk_level }}</span>
-          {% endif %}
-        </td>
+              <!-- Risk Level: same badge classes used elsewhere on the dashboard -->
+              <td data-label="Risk Level">
+                {% if entry.risk_level | upper == 'LOW' %}
+                <span class="badge badge-low">{{ entry.risk_level }}</span>
+                {% elif entry.risk_level | upper == 'MEDIUM' %}
+                <span class="badge badge-medium">{{ entry.risk_level }}</span>
+                {% else %}
+                <span class="badge badge-high">{{ entry.risk_level }}</span>
+                {% endif %}
+              </td>
 
-        <!-- Status -->
-        <td data-label="Status">
-          {% if entry.status | upper in ['SUCCESS', 'AUTHENTICATED'] %}
-            <span class="soc-status soc-status-ok">
-              <span class="soc-status-dot"></span>{{ entry.status }}
-            </span>
-          {% elif entry.status | upper in ['FLAGGED', 'PENDING'] %}
-            <span class="soc-status soc-status-warn">
-              <span class="soc-status-dot"></span>{{ entry.status }}
-            </span>
-          {% else %}
-            <span class="soc-status soc-status-fail">
-              <span class="soc-status-dot"></span>{{ entry.status }}
-            </span>
-          {% endif %}
-        </td>
-      </tr>
-      {% else %}
-      <tr>
-        <td colspan="4" class="soc-empty">No login activity recorded yet.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+              <!-- Status -->
+              <td data-label="Status">
+                {% if entry.status | upper in ['SUCCESS', 'AUTHENTICATED'] %}
+                <span class="soc-status soc-status-ok">
+                  <span class="soc-status-dot"></span>{{ entry.status }}
+                </span>
+                {% elif entry.status | upper in ['FLAGGED', 'PENDING'] %}
+                <span class="soc-status soc-status-warn">
+                  <span class="soc-status-dot"></span>{{ entry.status }}
+                </span>
+                {% else %}
+                <span class="soc-status soc-status-fail">
+                  <span class="soc-status-dot"></span>{{ entry.status }}
+                </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="soc-empty">
+                No login activity recorded yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-  <div class="footer-note">
-    CONTINUOUS BEHAVIORAL MONITORING ACTIVE — SESSION SECURED BY BBA-PATP
-  </div>
-
-</main>
-<script>
-document.querySelectorAll(".soc-score-fill").forEach(bar => {
-    const score = parseFloat(bar.dataset.score) || 0;
-    bar.style.width = score + "%";
-});
-</script>
-
-</body>
+      <div class="footer-note">
+        CONTINUOUS BEHAVIORAL MONITORING ACTIVE — SESSION SECURED BY BBA-PATP
+      </div>
+    </main>
+    <script>
+      document.querySelectorAll(".soc-score-fill").forEach((bar) => {
+        const score = parseFloat(bar.dataset.score) || 0;
+        bar.style.width = score + "%";
+      });
+    </script>
+  </body>
 </html>

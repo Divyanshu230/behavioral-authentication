@@ -354,7 +354,7 @@ def create_app():
         finally:
             connection.close()
 
-        if score < 70:
+        if score < 60:
             flash(
                 f"Login blocked. Suspicious behavior detected. Score: {score:.2f}%",
                 "error"

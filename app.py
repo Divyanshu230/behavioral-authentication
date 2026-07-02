@@ -418,10 +418,20 @@ def create_app():
             average_score = round(average_score, 2) if average_score else 0
             highest_score = highest_score or 0
             lowest_score = lowest_score or 0
+            
 
         finally:
             connection.close()
-            
+
+        chart_labels = [
+            datetime.strptime(
+                entry["login_time"],
+                "%Y-%m-%d %H:%M:%S",
+            ).strftime("%H:%M")
+            for entry in reversed(login_history)
+        ]
+        chart_scores = [entry["behavior_score"] for entry in reversed(login_history)]
+
         return render_template(
             "dashboard.html",
             username=session.get("username"),
@@ -437,7 +447,9 @@ def create_app():
             total_logins=total_logins,
             average_score=average_score,
             highest_score=highest_score,
-            lowest_score=lowest_score
+            lowest_score=lowest_score,
+            chart_labels=chart_labels,
+            chart_scores=chart_scores,
         )
 
     return app

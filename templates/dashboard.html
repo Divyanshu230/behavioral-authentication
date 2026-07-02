@@ -754,6 +754,147 @@
         color: white;
         font-family: var(--font-mono);
       }
+
+      /* ============================================================
+         CHART SECTION — scoped styles
+         Uses only tokens already defined in dashboard.html:
+         --bg, --panel, --panel-2, --card, --line, --text, --text-dim,
+         --cyan, --cyan-dim, --font-sans, --font-mono. No new colors introduced.
+         ============================================================ */
+      .chart-section {
+        margin-bottom: 40px;
+      }
+
+      .chart-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 24px 24px 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Subtle ambient glow in the top-left corner, echoing the body radial-
+         gradients used elsewhere on the dashboard. */
+      .chart-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at 8% 0%,
+          rgba(52, 229, 196, 0.04) 0%,
+          transparent 60%
+        );
+        pointer-events: none;
+      }
+
+      .chart-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .chart-title {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        margin: 0;
+      }
+
+      /* Live "scanning" badge — same visual language as .session-pill */
+      .chart-badge {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        background: rgba(52, 229, 196, 0.08);
+        border: 1px solid var(--cyan-dim);
+        border-radius: 999px;
+        padding: 4px 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .chart-badge-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--cyan);
+        box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.6);
+        animation: pulse-dot 2.4s ease-out infinite;
+        flex-shrink: 0;
+      }
+
+      @keyframes pulse-dot {
+        0% {
+          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.5);
+        }
+        70% {
+          box-shadow: 0 0 0 6px rgba(52, 229, 196, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0);
+        }
+      }
+
+      /* Canvas wrapper controls height. Keeping it at 200px (down from the default)
+         matches the compact SOC-dashboard aesthetic in the screenshot. */
+      .chart-wrap {
+        position: relative;
+        height: 200px;
+      }
+
+      /* Custom tooltip card — replaces the Chart.js default grey box */
+      .chart-tooltip {
+        background: var(--panel);
+        border: 1px solid var(--cyan-dim);
+        border-radius: 8px;
+        padding: 8px 12px;
+        pointer-events: none;
+        position: absolute;
+        white-space: nowrap;
+        transform: translate(-50%, -110%);
+        transition: opacity 0.1s ease;
+      }
+
+      .chart-tooltip-time {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+
+      .chart-tooltip-value {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--cyan);
+        letter-spacing: -0.01em;
+        text-shadow: 0 0 8px rgba(52, 229, 196, 0.4);
+      }
+
+      @media (max-width: 600px) {
+        .chart-wrap {
+          height: 160px;
+        }
+        .chart-header {
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .chart-badge-dot {
+          animation: none !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -926,6 +1067,24 @@
         </div>
       </div>
 
+      <!-- Behavior Score Trend -->
+      <section class="chart-section">
+        <h2 class="section-title">Behavior Score Trend</h2>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">Behavior Score Trend</h2>
+            <div class="chart-badge">
+              <span class="chart-badge-dot"></span>
+              Live
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <canvas id="scoreChart"></canvas>
+          </div>
+        </div>
+      </section>
       <!-- ==============================================================
        AMBIENT TELEMETRY STRIP (decorative, echoes login/register motif)
        ============================================================== -->
@@ -1082,11 +1241,180 @@
         CONTINUOUS BEHAVIORAL MONITORING ACTIVE — SESSION SECURED BY BBA-PATP
       </div>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script>
       document.querySelectorAll(".soc-score-fill").forEach((bar) => {
         const score = parseFloat(bar.dataset.score) || 0;
         bar.style.width = score + "%";
       });
+
+      (function () {
+        /* -------------------------------------------------------------------
+           DATA — Jinja injects the arrays; JSON.parse keeps them as native JS arrays
+           even when the template is rendered server-side.
+           ------------------------------------------------------------------- */
+        const labels = {{ chart_labels | tojson }};
+        const values = {{ chart_scores | tojson }};
+
+        /* -------------------------------------------------------------------
+           DESIGN TOKENS — mirror CSS custom properties so the chart matches the
+           rest of the dashboard exactly without reading computed styles.
+           ------------------------------------------------------------------- */
+        const T = {
+          cyan: "#34e5c4",
+          cyanDim: "#1f8f7c",
+          cyanFaint: "rgba(52, 229, 196, 0.12)",
+          cyanFill0: "rgba(52, 229, 196, 0.18)",
+          cyanFillN: "rgba(52, 229, 196, 0.00)",
+          line: "#1f2a35",
+          textDim: "#8b98a5",
+          panel: "#10151c",
+          mono: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace',
+        };
+
+        /* -------------------------------------------------------------------
+           GRADIENT FILL — cyan at the line fading to transparent at the base,
+           giving the area-under-the-line a SOC-scanner feeling.
+           ------------------------------------------------------------------- */
+        const canvas = document.getElementById("scoreChart");
+        const ctx = canvas.getContext("2d");
+        const areaGradient = ctx.createLinearGradient(0, 0, 0, 200);
+        areaGradient.addColorStop(0, T.cyanFill0);
+        areaGradient.addColorStop(1, T.cyanFillN);
+
+        /* -------------------------------------------------------------------
+           CUSTOM TOOLTIP ELEMENT — positioned by the plugin below.
+           ------------------------------------------------------------------- */
+        const tooltipEl = document.createElement("div");
+        tooltipEl.className = "chart-tooltip";
+        tooltipEl.style.opacity = "0";
+        canvas.parentNode.appendChild(tooltipEl);
+
+        const externalTooltip = (context) => {
+          const { chart, tooltip } = context;
+
+          if (tooltip.opacity === 0) {
+            tooltipEl.style.opacity = "0";
+            return;
+          }
+
+          const point = tooltip.dataPoints[0];
+          const label = tooltip.title[0] || "";
+          const value = point ? point.formattedValue : "";
+
+          tooltipEl.innerHTML =
+            '<div class="chart-tooltip-time">' +
+            label +
+            "</div>" +
+            '<div class="chart-tooltip-value">' +
+            value +
+            "%</div>";
+
+          const pos = chart.canvas.getBoundingClientRect();
+          const x = tooltip.caretX;
+          const y = tooltip.caretY;
+
+          tooltipEl.style.left = x + "px";
+          tooltipEl.style.top = y + "px";
+          tooltipEl.style.opacity = "1";
+        };
+
+        /* -------------------------------------------------------------------
+           CHART INSTANCE
+           ------------------------------------------------------------------- */
+        new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                data: values,
+                borderColor: T.cyan,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: T.panel,
+                pointBorderColor: T.cyan,
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: T.cyan,
+                pointHoverBorderColor: T.cyan,
+                fill: true,
+                backgroundColor: areaGradient,
+                tension: 0.30,
+                /* smooth bezier, matches the screenshot */
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 600,
+              easing: "easeInOutQuart",
+            },
+            interaction: {
+              mode: "index",
+              intersect: false,
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+              /* no legend — clean SOC look */
+              tooltip: {
+                enabled: false,
+                /* replaced by custom tooltip above */
+                external: externalTooltip,
+              },
+            },
+            scales: {
+              x: {
+                border: {
+                  display: false,
+                },
+                grid: {
+                  color: T.line,
+                  lineWidth: 1,
+                  drawTicks: false,
+                },
+                ticks: {
+                  color: T.textDim,
+                  font: {
+                    family: T.mono,
+                    size: 10,
+                  },
+                  maxRotation: 0,
+                  padding: 8,
+                  /* show at most 6 labels to avoid crowding on small screens */
+                  maxTicksLimit: 6,
+                },
+              },
+              y: {
+                min: 0,
+                suggestedMax:100,
+                border: {
+                  display: false,
+                },
+                grid: {
+                  color: T.line,
+                  lineWidth: 1,
+                  drawTicks: false,
+                },
+                ticks: {
+                  color: T.textDim,
+                  font: {
+                    family: T.mono,
+                    size: 10,
+                  },
+                  padding: 10,
+                  stepSize: 20,
+                  callback: (v) => (v === 0 ? "0" : v),
+                },
+              },
+            },
+          },
+        });
+      })();
     </script>
   </body>
 </html>

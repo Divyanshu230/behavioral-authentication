@@ -301,6 +301,8 @@ if (verifyBtn) {
 
             const result = await response.json();
             console.log(result);
+            console.log(result.prediction);
+            console.log(result.risk_level);
 
             document.getElementById("liveHoldTime").textContent =
                 result.hold_time.toFixed(2);
@@ -311,14 +313,11 @@ if (verifyBtn) {
             document.getElementById("liveTypingSpeed").textContent =
                 result.typing_speed.toFixed(2);
 
-            document.getElementById("liveTrustScore").innerHTML =
+            document.getElementById("sessionTrustScore").innerHTML =
                 result.behavior_score.toFixed(2) +
                 '<span class="unit">%</span>';
 
-            document.getElementById("liveTrustScore").innerHTML =
-                result.behavior_score + '<span class="unit">%</span>';
-
-            const prediction = document.getElementById("livePrediction");
+            const prediction = document.getElementById("sessionPrediction");
             prediction.textContent = result.prediction;
             prediction.className = "status-badge";
             prediction.classList.add(
@@ -327,7 +326,7 @@ if (verifyBtn) {
                     : "status-anomaly"
             );
 
-            const risk = document.getElementById("liveRisk");
+            const risk = document.getElementById("sessionRisk");
             risk.textContent = result.risk_level;
             risk.className = "status-badge";
             risk.classList.add(

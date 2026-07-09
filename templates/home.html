@@ -70,8 +70,9 @@
           A next-generation identity layer that verifies <em>how</em> you type,
           not just what you type. Keystroke dynamics&mdash;hold time, flight
           time, and typing rhythm&mdash;are captured in real time and scored
-          against your enrolled baseline using a trained ML model, giving every
-          session a live, continuous authentication confidence score.
+          against your enrolled baseline using similarity scoring and an
+          Isolation Forest model, giving every session a live, continuous
+          authentication confidence score.
         </p>
 
         <div class="hero-cta">
@@ -85,7 +86,7 @@
         <div class="hero-telemetry">
           <div class="telemetry-chip">
             <span class="chip-label">MODEL</span>
-            <span class="chip-value">Random Forest / SVM</span>
+            <span class="chip-value">Similarity + Isolation Forest</span>
           </div>
           <div class="telemetry-chip">
             <span class="chip-label">SIGNAL</span>
@@ -214,8 +215,8 @@
             <span class="step-index">02</span>
             <h3>Capture Behavioral Data</h3>
             <p>
-              Keystroke and mouse signals are recorded during every login
-              attempt.
+              Keystroke timing features, including hold time and flight time,
+              are recorded during every login attempt.
             </p>
           </div>
           <div class="step-connector" aria-hidden="true"></div>
@@ -288,7 +289,7 @@
         <div class="about-text">
           <p>
             Traditional authentication relies on something a user knows (such as
-            a password) or possesses (such as an OTP or hardware token),none of
+            a password) or possesses (such as an OTP or hardware token), none of
             which prove that the person entering it is actually the enrolled
             user. This project,
             <strong

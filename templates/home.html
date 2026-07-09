@@ -142,11 +142,12 @@
           </article>
 
           <article class="feature-card">
-            <div class="feature-icon" data-icon="mouse"></div>
-            <h3>Mouse Movement Analysis</h3>
+            <div class="feature-icon" data-icon="adaptive"></div>
+            <h3>Adaptive Profile Learning</h3>
             <p>
-              Tracks cursor velocity, acceleration, and click cadence as a
-              secondary behavioral channel.
+              Continuously updates the user's behavioral profile after
+              successful low-risk logins, improving authentication accuracy over
+              time.
             </p>
           </article>
 
@@ -286,34 +287,39 @@
 
         <div class="about-text">
           <p>
-            Traditional authentication relies on something a user knows or
-            holds&mdash;a password, an OTP, a token&mdash;none of which prove
-            that the person entering it is actually the enrolled user. This
-            project,
+            Traditional authentication relies on something a user knows (such as
+            a password) or possesses (such as an OTP or hardware token),none of
+            which prove that the person entering it is actually the enrolled
+            user. This project,
             <strong
               >Smart Authentication System using Behavioral Biometrics and
               Machine Learning</strong
             >, addresses that gap by treating typing rhythm itself as a
             credential. Every login attempt is captured as a stream of keystroke
             timings, converted into hold-time and flight-time features, and
-            passed through a trained classifier that outputs a behavior match
-            score.
+            passed through a behavioral analysis pipeline that combines
+            similarity scoring with an Isolation Forest anomaly detection model
+            to produce a final behavior score.
           </p>
           <p>
-            The system is built end-to-end on a Python and Flask backend, with
-            SQLite handling session and user telemetry, and Scikit-learn
-            powering the underlying model that distinguishes an enrolled user's
-            typical rhythm from an impostor's. Authentication does not end at
-            login: the same signal pipeline continues to sample behavior for the
-            duration of the session, allowing the system to flag and respond to
-            risk in real time rather than only at the point of entry.
+            The system is developed using a Python Flask backend, with SQLite
+            managing user accounts, behavioral profiles, login history, and
+            session data, while Scikit-learn powers the machine learning model.
+            Authentication extends beyond the initial login through continuous
+            session verification, where typing behavior is periodically
+            re-evaluated to detect anomalies throughout the active session.
+            Successful low-risk logins with behavior closely matching the
+            enrolled profile are used to update the stored behavioral profile.
+            This adaptive learning mechanism allows the system to gradually
+            accommodate natural changes in the user's typing behavior while
+            preventing anomalous sessions from influencing the enrolled profile.
           </p>
           <p>
             Developed as a final-year Bachelor of Engineering major project in
             Electronics and Communication Engineering, the system demonstrates
-            how lightweight behavioral signals, combined with a modest machine
-            learning pipeline, can meaningfully strengthen conventional
-            authentication without adding friction for the legitimate user.
+            how lightweight behavioral signals, combined with machine learning,
+            can meaningfully strengthen conventional authentication without
+            adding friction for the legitimate user.
           </p>
         </div>
       </div>

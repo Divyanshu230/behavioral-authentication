@@ -67,9 +67,6 @@ decision_scores = model.decision_function(X)
 score_min = decision_scores.min()
 score_max = decision_scores.max()
 
-print("Decision Score Range")
-print("Min:", score_min)
-print("Max:", score_max)
 
 
 # ------------------------------------
@@ -84,9 +81,5 @@ joblib.dump(
     },
     "ml/behavior_model.pkl"
 )
-print("Min:", score_min)
-print("Max:", score_max)
 
-print("✅ Machine Learning model trained successfully!")
 
-print(df)

@@ -12,9 +12,7 @@ Responsibilities of this module:
 
 Compatible with Python 3.12.
 """
-from multiprocessing import connection
-from multiprocessing import connection
-from tkinter.tix import MAX
+
 
 from ml.evaluate_model import (
     predict_behavior,
@@ -257,9 +255,7 @@ def create_app():
         typing_speed = float(
             request.form.get("typing_speed", 0)
         )
-        print("Hold:", hold_time)
-        print("Flight:", flight_time)
-        print("Speed:", typing_speed)
+        
 
         connection = get_db_connection()
 
@@ -350,15 +346,7 @@ def create_app():
         risk = calculate_risk_level(
             behavior_score
         )
-        print("\n========== LOGIN ANALYSIS ==========")
-        print("Similarity Score :", similarity_score)
-        print("ML Prediction    :", ml_prediction)
-        print("Decision Score   :", decision_score)
-        print("ML Confidence    :", ml_confidence)
-        print("Behavior Score   :", behavior_score)
-        print("Risk Level       :", risk)
-        print("===================================\n")
-
+       
 
         # ----------------------------------------
         # Block suspicious logins
@@ -397,18 +385,18 @@ def create_app():
         # ==========================================
 
         new_hold = (
-            float(profile["avg_hold_time"]) * 0.8 +
-            hold_time * 0.2
+            float(profile["avg_hold_time"]) * 0.9 +
+            hold_time * 0.1
         )
 
         new_flight = (
-            float(profile["avg_flight_time"]) * 0.8 +
-            flight_time * 0.2
+            float(profile["avg_flight_time"]) * 0.9 +
+            flight_time * 0.1
         )
 
         new_speed = (
-            float(profile["avg_typing_speed"]) * 0.8 +
-            typing_speed * 0.2
+            float(profile["avg_typing_speed"]) * 0.9 +
+            typing_speed * 0.1
         )
 
         connection.execute(
@@ -428,14 +416,7 @@ def create_app():
             )
         )
 
-        print("\n===== PROFILE UPDATED =====")
-        print("Old Hold :", profile["avg_hold_time"])
-        print("New Hold :", round(new_hold, 2))
-        print("Old Flight :", profile["avg_flight_time"])
-        print("New Flight :", round(new_flight, 2))
-        print("Old Speed :", profile["avg_typing_speed"])
-        print("New Speed :", round(new_speed, 2))
-        print("===========================\n")
+       
 
         try:
             login_time = datetime.now(
@@ -643,19 +624,7 @@ def create_app():
         prediction_text = (
             "Normal" if ml_prediction == 1 else "Anomaly"
         )
-        print("\n====== CONTINUOUS CHECK ======")
-        print("Hold:", hold_time)
-        print("Flight:", flight_time)
-        print("Speed:", typing_speed)
-        print("Similarity:", similarity_score)
-        print("ML Prediction:", ml_prediction)
-        print("Decision Score:", decision_score)
-        print("ML Confidence:", ml_confidence)
-        print("Behavior Score:", behavior_score)
-        print("Risk:", risk)
-        print("==============================\n")
         
-
         return jsonify({
             "behavior_score": behavior_score,
             "prediction": prediction_text,

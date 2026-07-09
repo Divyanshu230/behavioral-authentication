@@ -133,13 +133,18 @@
         const passwordInput = document.getElementById("password");
         const toggle = document.getElementById("togglePassword");
         const caps = document.getElementById("capsWarning");
+        console.log(passwordInput);
+        console.log(toggle);
+        console.log(caps);
 
         // Start in the "hidden" state, showing the open-eye icon (click to reveal).
         toggle.innerHTML = ICON_EYE;
 
         toggle.addEventListener("click", function () {
+          console.log("Button clicked");
           const isHidden = passwordInput.type === "password";
           passwordInput.type = isHidden ? "text" : "password";
+          
           toggle.innerHTML = isHidden ? ICON_EYE_OFF : ICON_EYE;
           toggle.setAttribute(
             "aria-label",

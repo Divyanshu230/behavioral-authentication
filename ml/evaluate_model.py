@@ -1,3 +1,16 @@
+"""
+Behavior Analysis Module
+
+This module performs:
+
+1. Similarity score calculation
+2. Machine learning prediction
+3. ML confidence estimation
+4. Final behavior score calculation
+5. Risk level classification
+
+Author: Divyanshu Anand
+"""
 import joblib
 
 from ml.feature_extraction import extract_features
@@ -154,3 +167,53 @@ def calculate_risk_level(
         return "MEDIUM"
 
     return "HIGH"
+# ----------------------------------------
+# Complete Behavior Analysis
+# ----------------------------------------
+
+def analyze_behavior(
+    hold_time,
+    flight_time,
+    typing_speed,
+    profile_hold,
+    profile_flight,
+    profile_speed
+):
+
+    similarity_score = calculate_similarity_score(
+        hold_time,
+        flight_time,
+        typing_speed,
+        profile_hold,
+        profile_flight,
+        profile_speed
+    )
+
+    ml_prediction, decision_score = predict_behavior(
+        hold_time,
+        flight_time,
+        typing_speed
+    )
+
+    ml_confidence = calculate_ml_confidence(
+        ml_prediction,
+        decision_score
+    )
+
+    behavior_score = calculate_behavior_score(
+        similarity_score,
+        ml_confidence
+    )
+
+    risk = calculate_risk_level(
+        behavior_score
+    )
+
+    return {
+        "similarity_score": similarity_score,
+        "ml_prediction": ml_prediction,
+        "decision_score": decision_score,
+        "ml_confidence": ml_confidence,
+        "behavior_score": behavior_score,
+        "risk": risk
+    }

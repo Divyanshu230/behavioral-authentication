@@ -3,16 +3,22 @@ import joblib
 from ml.feature_extraction import extract_features
 
 
-# ----------------------------------------
-# Load trained model
-# ----------------------------------------
+# =====================================================
+# Load trained Isolation Forest model
+# =====================================================
 
-model = joblib.load("ml/behavior_model.pkl")
+saved_model = joblib.load("ml/behavior_model.pkl")
+
+model = saved_model["model"]
+
+SCORE_MIN = saved_model["score_min"]
+
+SCORE_MAX = saved_model["score_max"]
 
 
-# ----------------------------------------
-# Predict user behavior
-# ----------------------------------------
+# =====================================================
+# Predict Behavior
+# =====================================================
 
 def predict_behavior(
     hold_time,
@@ -26,6 +32,125 @@ def predict_behavior(
         typing_speed
     )
 
-    prediction = model.predict(features)
+    prediction = model.predict(features)[0]
 
-    return prediction[0]
+    decision_score = model.decision_function(features)[0]
+
+    return prediction, decision_score
+
+
+# =====================================================
+# Similarity Score
+# =====================================================
+
+def calculate_similarity_score(
+    current_hold,
+    current_flight,
+    current_speed,
+    profile_hold,
+    profile_flight,
+    profile_speed
+):
+
+    hold_similarity = max(
+        0,
+        100 - (
+            abs(current_hold - profile_hold)
+            / max(profile_hold, 1)
+        ) * 100
+    )
+
+    flight_similarity = max(
+        0,
+        100 - (
+            abs(current_flight - profile_flight)
+            / max(profile_flight, 1)
+        ) * 100
+    )
+
+    speed_similarity = max(
+        0,
+        100 - (
+            abs(current_speed - profile_speed)
+            / max(profile_speed, 1)
+        ) * 100
+    )
+
+    similarity = (
+
+        hold_similarity * 0.50 +
+
+        flight_similarity * 0.30 +
+
+        speed_similarity * 0.20
+    )
+
+    return round(similarity, 2)
+
+
+# =====================================================
+# ML Confidence
+# =====================================================
+
+def calculate_ml_confidence(
+    prediction,
+    decision_score
+):
+
+    normalized = (
+        decision_score - SCORE_MIN
+    ) / (
+        SCORE_MAX - SCORE_MIN
+    )
+
+    normalized = max(
+        0,
+        min(
+            1,
+            normalized
+        )
+    )
+
+    if prediction == 1:
+
+        confidence = 70 + normalized * 30
+
+    else:
+
+        confidence = normalized * 40
+
+    return round(confidence, 2)
+
+
+# =====================================================
+# Final Behavior Score
+# =====================================================
+
+def calculate_behavior_score(
+    similarity_score,
+    ml_confidence
+):
+
+    score = (
+        similarity_score * 0.85 +
+        ml_confidence * 0.15
+    )
+
+    return round(score, 2)
+
+
+# =====================================================
+# Risk Level
+# =====================================================
+
+def calculate_risk_level(
+    behavior_score
+):
+
+    if behavior_score >= 85:
+        return "LOW"
+
+    elif behavior_score >= 70:
+        return "MEDIUM"
+
+    return "HIGH"

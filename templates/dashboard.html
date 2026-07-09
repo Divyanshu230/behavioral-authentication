@@ -4,898 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard &mdash; Smart Authentication System</title>
-    <style>
-      /* ==========================================================================
-     DESIGN TOKENS
-     Same design system as login.html / register.html: dark instrument-panel
-     aesthetic, cyan accent for live/active states, amber for caution, a soft
-     rose reserved for high-risk states. System monospace for data/labels,
-     system sans for human-readable copy.
-     ========================================================================== */
-      :root {
-        --bg: #0a0e13;
-        --panel: #10151c;
-        --panel-2: #141b24;
-        --card: #11161d;
-        --line: #1f2a35;
-        --text: #e6edf3;
-        --text-dim: #8b98a5;
-        --cyan: #34e5c4;
-        --cyan-dim: #1f8f7c;
-        --amber: #ffb454;
-        --amber-dim: #7a5326;
-        --rose: #ff6b81;
-        --rose-dim: #7a2e3a;
-        --font-sans:
-          -apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial,
-          sans-serif;
-        --font-mono:
-          ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo,
-          Consolas, monospace;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        background: var(--bg);
-        color: var(--text);
-        font-family: var(--font-sans);
-        min-height: 100%;
-      }
-
-      body {
-        background-image:
-          radial-gradient(
-            circle at 12% 8%,
-            rgba(52, 229, 196, 0.05),
-            transparent 45%
-          ),
-          radial-gradient(
-            circle at 88% 92%,
-            rgba(52, 229, 196, 0.04),
-            transparent 50%
-          );
-      }
-
-      a {
-        color: var(--cyan);
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-
-      a:focus-visible,
-      button:focus-visible {
-        outline: 2px solid var(--cyan);
-        outline-offset: 2px;
-      }
-
-      /* ==========================================================================
-     TOP BAR
-     ========================================================================== */
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 18px 32px;
-        border-bottom: 1px solid var(--line);
-        background: var(--panel);
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        letter-spacing: 0.08em;
-        color: var(--text-dim);
-      }
-
-      .brand .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--cyan);
-        box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.6);
-        animation: pulse-dot 2.4s ease-out infinite;
-        flex-shrink: 0;
-      }
-
-      @keyframes pulse-dot {
-        0% {
-          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.5);
-        }
-        70% {
-          box-shadow: 0 0 0 8px rgba(52, 229, 196, 0);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0);
-        }
-      }
-
-      .topbar-right {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-      }
-
-      .session-pill {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.06em;
-        color: var(--cyan);
-        background: rgba(52, 229, 196, 0.08);
-        border: 1px solid var(--cyan-dim);
-        border-radius: 999px;
-        padding: 6px 12px;
-        text-transform: uppercase;
-      }
-
-      .logout-btn {
-        font-family: var(--font-mono);
-        font-size: 12px;
-        letter-spacing: 0.05em;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 8px 14px;
-        cursor: pointer;
-        transition:
-          border-color 0.15s ease,
-          color 0.15s ease,
-          background 0.15s ease;
-      }
-
-      .logout-btn:hover {
-        border-color: var(--rose-dim);
-        color: var(--rose);
-        background: rgba(255, 107, 129, 0.06);
-        text-decoration: none;
-      }
-
-      /* ==========================================================================
-     MAIN LAYOUT
-     ========================================================================== */
-      main {
-        max-width: 1180px;
-        margin: 0 auto;
-        padding: 40px 32px 60px;
-      }
-
-      /* ---- Hero: welcome + identity-match gauge ---- */
-      .hero {
-        display: grid;
-        grid-template-columns: 1fr 260px;
-        gap: 36px;
-        align-items: center;
-        padding-bottom: 36px;
-        border-bottom: 1px solid var(--line);
-        margin-bottom: 36px;
-      }
-
-      .eyebrow {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.1em;
-        color: var(--cyan);
-        text-transform: uppercase;
-        margin-bottom: 10px;
-      }
-
-      .hero h1 {
-        font-size: 28px;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        margin: 0 0 10px;
-      }
-
-      .hero h1 .uname {
-        color: var(--cyan);
-      }
-
-      .hero p {
-        font-size: 14px;
-        color: var(--text-dim);
-        line-height: 1.6;
-        margin: 0;
-        max-width: 480px;
-      }
-
-      .hero p .mono {
-        font-family: var(--font-mono);
-        color: var(--text);
-      }
-
-      /* ---- Gauge: ring built from a conic-gradient driven by --score ---- */
-      .gauge-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .gauge {
-        --score: 0;
-        width: 168px;
-        height: 168px;
-        border-radius: 50%;
-        background: conic-gradient(
-          var(--cyan) calc(var(--score) * 3.6deg),
-          var(--line) calc(var(--score) * 3.6deg) 360deg
-        );
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-      }
-
-      .gauge::before {
-        content: "";
-        position: absolute;
-        width: 132px;
-        height: 132px;
-        border-radius: 50%;
-        background: var(--panel);
-        border: 1px solid var(--line);
-      }
-
-      .gauge-value {
-        position: relative;
-        font-family: var(--font-mono);
-        font-size: 28px;
-        font-weight: 600;
-        color: var(--cyan);
-        z-index: 1;
-      }
-
-      .gauge-value sup {
-        font-size: 13px;
-        margin-left: 2px;
-      }
-
-      .gauge-label {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.07em;
-        color: var(--text-dim);
-        text-transform: uppercase;
-        text-align: center;
-      }
-
-      /* ==========================================================================
-     METRIC CARD GRID
-     ========================================================================== */
-      .section-title {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        color: var(--text-dim);
-        text-transform: uppercase;
-        margin: 0 0 16px;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
-        margin-bottom: 40px;
-      }
-
-      .card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 20px;
-        transition:
-          transform 0.18s ease,
-          border-color 0.18s ease,
-          box-shadow 0.18s ease;
-      }
-
-      .card:hover {
-        transform: translateY(-3px);
-        border-color: var(--cyan-dim);
-        box-shadow: 0 10px 30px -12px rgba(52, 229, 196, 0.25);
-      }
-
-      .card-label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-family: var(--font-mono);
-        font-size: 10.5px;
-        letter-spacing: 0.07em;
-        color: var(--text-dim);
-        text-transform: uppercase;
-        margin-bottom: 12px;
-      }
-
-      .card-icon {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--cyan-dim);
-        flex-shrink: 0;
-      }
-
-      .card-value {
-        font-family: var(--font-mono);
-        font-size: 22px;
-        font-weight: 600;
-        color: var(--text);
-        line-height: 1.2;
-      }
-
-      .card-value .unit {
-        font-size: 13px;
-        color: var(--text-dim);
-        margin-left: 4px;
-        font-weight: 400;
-      }
-
-      .card-sub {
-        margin-top: 8px;
-        font-size: 12px;
-        color: var(--text-dim);
-        line-height: 1.5;
-      }
-
-      /* ---- Status badges (Risk Level / Authentication Status) ---- */
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        padding: 5px 11px;
-        border-radius: 999px;
-      }
-
-      .badge::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-      }
-
-      .badge-low {
-        color: var(--cyan);
-        background: rgba(52, 229, 196, 0.08);
-        border: 1px solid var(--cyan-dim);
-      }
-      .badge-low::before {
-        background: var(--cyan);
-      }
-
-      .badge-medium {
-        color: var(--amber);
-        background: rgba(255, 180, 84, 0.08);
-        border: 1px solid var(--amber-dim);
-      }
-      .badge-medium::before {
-        background: var(--amber);
-      }
-
-      .badge-high {
-        color: var(--rose);
-        background: rgba(255, 107, 129, 0.08);
-        border: 1px solid var(--rose-dim);
-      }
-      .badge-high::before {
-        background: var(--rose);
-      }
-
-      /* ---- Ambient telemetry strip (decorative, echoes login/register bars) --- */
-      .telemetry {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 22px 24px;
-      }
-
-      .telemetry-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-bottom: 18px;
-      }
-
-      .readout {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .readout-row {
-        display: grid;
-        grid-template-columns: 150px 1fr;
-        align-items: center;
-        gap: 14px;
-      }
-
-      .readout-label {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.07em;
-        color: var(--text-dim);
-        text-transform: uppercase;
-      }
-
-      .bars {
-        display: flex;
-        align-items: flex-end;
-        gap: 3px;
-        height: 20px;
-      }
-
-      .bars span {
-        flex: 1;
-        background: var(--cyan-dim);
-        border-radius: 1px;
-        animation: bar-pulse 1.8s ease-in-out infinite;
-      }
-
-      @keyframes bar-pulse {
-        0%,
-        100% {
-          height: 20%;
-          background: var(--cyan-dim);
-        }
-        50% {
-          height: 90%;
-          background: var(--cyan);
-        }
-      }
-
-      .footer-note {
-        margin-top: 28px;
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.04em;
-        color: var(--text-dim);
-        text-align: center;
-      }
-
-      /* ==========================================================================
-     RESPONSIVE
-     ========================================================================== */
-      @media (max-width: 980px) {
-        .grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (max-width: 760px) {
-        .hero {
-          grid-template-columns: 1fr;
-          text-align: center;
-        }
-        .hero p {
-          margin: 0 auto;
-        }
-        .topbar {
-          padding: 16px 20px;
-        }
-        main {
-          padding: 28px 18px 48px;
-        }
-      }
-
-      @media (max-width: 520px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
-        .readout-row {
-          grid-template-columns: 110px 1fr;
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .brand .dot,
-        .bars span {
-          animation: none !important;
-        }
-        .card {
-          transition: none !important;
-        }
-      }
-
-      /* ==========================================================================
-     RECENT LOGIN HISTORY — scoped styles
-     Reuses existing tokens only: --card, --line, --text, --text-dim, --cyan,
-     --cyan-dim, --amber, --amber-dim, --rose, --rose-dim, --font-sans,
-     --font-mono. No new color or spacing values are introduced.
-     ========================================================================== */
-
-      .soc-table-wrap {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        overflow-x: auto;
-        margin-bottom: 40px;
-      }
-
-      .soc-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 640px; /* preserves column legibility; wrapper scrolls on small screens */
-      }
-
-      .soc-table thead th {
-        text-align: left;
-        font-family: var(--font-mono);
-        font-size: 10.5px;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-        color: var(--text-dim);
-        padding: 14px 20px;
-        border-bottom: 1px solid var(--line);
-        background: var(--panel);
-        position: sticky;
-        top: 0;
-      }
-
-      .soc-table thead th:first-child {
-        border-radius: 10px 0 0 0;
-      }
-      .soc-table thead th:last-child {
-        border-radius: 0 10px 0 0;
-      }
-
-      .soc-table tbody tr {
-        border-bottom: 1px solid var(--line);
-        transition: background 0.15s ease;
-      }
-
-      .soc-table tbody tr:last-child {
-        border-bottom: none;
-      }
-
-      .soc-table tbody tr:hover {
-        background: rgba(52, 229, 196, 0.04);
-      }
-
-      .soc-table td {
-        padding: 14px 20px;
-        font-size: 13.5px;
-        color: var(--text);
-        vertical-align: middle;
-      }
-
-      .soc-time {
-        font-family: var(--font-mono);
-        font-size: 12.5px;
-        color: var(--text-dim);
-        white-space: nowrap;
-      }
-
-      /* ---- Behavior score: value + inline magnitude bar ---- */
-      .soc-score {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .soc-score-value {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        color: var(--text);
-        min-width: 48px;
-      }
-
-      .soc-score-value .unit {
-        color: var(--text-dim);
-        font-size: 11px;
-        margin-left: 1px;
-      }
-
-      .soc-score-track {
-        flex: 1;
-        max-width: 90px;
-        height: 5px;
-        border-radius: 999px;
-        background: var(--line);
-        overflow: hidden;
-        display: inline-block;
-      }
-
-      .soc-score-fill {
-        display: block;
-        height: 100%;
-        background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
-        border-radius: 999px;
-      }
-
-      /* ---- Status pill: dot + label, separate from risk badge so the two
-     signals (risk vs. outcome) stay visually distinct, as in
-     Okta/Cloudflare Zero Trust event logs. ---- */
-      .soc-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        font-family: var(--font-mono);
-        font-size: 12.5px;
-        letter-spacing: 0.02em;
-      }
-
-      .soc-status-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-
-      .soc-status-ok {
-        color: var(--cyan);
-      }
-      .soc-status-ok .soc-status-dot {
-        background: var(--cyan);
-        box-shadow: 0 0 6px rgba(52, 229, 196, 0.6);
-      }
-
-      .soc-status-warn {
-        color: var(--amber);
-      }
-      .soc-status-warn .soc-status-dot {
-        background: var(--amber);
-        box-shadow: 0 0 6px rgba(255, 180, 84, 0.5);
-      }
-
-      .soc-status-fail {
-        color: var(--rose);
-      }
-      .soc-status-fail .soc-status-dot {
-        background: var(--rose);
-        box-shadow: 0 0 6px rgba(255, 107, 129, 0.5);
-      }
-
-      .soc-empty {
-        text-align: center;
-        color: var(--text-dim);
-        font-family: var(--font-mono);
-        font-size: 12.5px;
-        padding: 28px 20px;
-      }
-
-      /* ==========================================================================
-     RESPONSIVE
-     On narrow screens the table becomes a stacked card list — each row
-     turns into a labeled block instead of scrolling horizontally, which
-     keeps the SOC-log feel readable on mobile.
-     ========================================================================== */
-      @media (max-width: 640px) {
-        .soc-table thead {
-          display: none;
-        }
-
-        .soc-table,
-        .soc-table tbody,
-        .soc-table tr,
-        .soc-table td {
-          display: block;
-          width: 100%;
-        }
-
-        .soc-table tbody tr {
-          padding: 14px 16px;
-          border-bottom: 1px solid var(--line);
-        }
-
-        .soc-table td {
-          padding: 6px 0;
-          border: none;
-        }
-
-        .soc-table td::before {
-          content: attr(data-label);
-          display: block;
-          font-family: var(--font-mono);
-          font-size: 10px;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--text-dim);
-          margin-bottom: 3px;
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .soc-table tbody tr {
-          transition: none !important;
-        }
-      }
-      /* ==========================
-      Dashboard Analytics Cards
-      ========================== */
-
-      .analytics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 20px;
-        margin: 30px 0;
-      }
-
-      .analytics-card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 24px;
-        transition: 0.25s;
-      }
-
-      .analytics-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--cyan);
-        box-shadow: 0 0 18px rgba(64, 224, 208, 0.15);
-      }
-
-      .analytics-title {
-        display: block;
-        font-size: 11px;
-        letter-spacing: 0.12em;
-        color: var(--text-dim);
-        margin-bottom: 12px;
-        text-transform: uppercase;
-        font-family: var(--font-mono);
-      }
-
-      .analytics-card h2 {
-        margin: 0;
-        font-size: 24px;
-        color: white;
-        font-family: var(--font-mono);
-      }
-
-      /* ============================================================
-         CHART SECTION — scoped styles
-         Uses only tokens already defined in dashboard.html:
-         --bg, --panel, --panel-2, --card, --line, --text, --text-dim,
-         --cyan, --cyan-dim, --font-sans, --font-mono. No new colors introduced.
-         ============================================================ */
-      .chart-section {
-        margin-bottom: 40px;
-      }
-
-      .chart-card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 24px 24px 20px;
-        position: relative;
-        overflow: hidden;
-      }
-
-      /* Subtle ambient glow in the top-left corner, echoing the body radial-
-         gradients used elsewhere on the dashboard. */
-      .chart-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(
-          ellipse at 8% 0%,
-          rgba(52, 229, 196, 0.04) 0%,
-          transparent 60%
-        );
-        pointer-events: none;
-      }
-
-      .chart-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 20px;
-      }
-
-      .chart-title {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--text-dim);
-        margin: 0;
-      }
-
-      /* Live "scanning" badge — same visual language as .session-pill */
-      .chart-badge {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-        color: var(--cyan);
-        background: rgba(52, 229, 196, 0.08);
-        border: 1px solid var(--cyan-dim);
-        border-radius: 999px;
-        padding: 4px 10px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .chart-badge-dot {
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background: var(--cyan);
-        box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.6);
-        animation: pulse-dot 2.4s ease-out infinite;
-        flex-shrink: 0;
-      }
-
-      @keyframes pulse-dot {
-        0% {
-          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.5);
-        }
-        70% {
-          box-shadow: 0 0 0 6px rgba(52, 229, 196, 0);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0);
-        }
-      }
-
-      /* Canvas wrapper controls height. Keeping it at 200px (down from the default)
-         matches the compact SOC-dashboard aesthetic in the screenshot. */
-      .chart-wrap {
-        position: relative;
-        height: 200px;
-      }
-
-      /* Custom tooltip card — replaces the Chart.js default grey box */
-      .chart-tooltip {
-        background: var(--panel);
-        border: 1px solid var(--cyan-dim);
-        border-radius: 8px;
-        padding: 8px 12px;
-        pointer-events: none;
-        position: absolute;
-        white-space: nowrap;
-        transform: translate(-50%, -110%);
-        transition: opacity 0.1s ease;
-      }
-
-      .chart-tooltip-time {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        letter-spacing: 0.05em;
-        color: var(--text-dim);
-        text-transform: uppercase;
-        margin-bottom: 3px;
-      }
-
-      .chart-tooltip-value {
-        font-family: var(--font-mono);
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--cyan);
-        letter-spacing: -0.01em;
-        text-shadow: 0 0 8px rgba(52, 229, 196, 0.4);
-      }
-
-      @media (max-width: 600px) {
-        .chart-wrap {
-          height: 160px;
-        }
-        .chart-header {
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .chart-badge-dot {
-          animation: none !important;
-        }
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
   </head>
   <body>
     <!-- ==============================================================
@@ -928,7 +40,7 @@
         </div>
 
         <div class="gauge-wrap">
-          <div class="gauge" style="--score: {{ behavior_score }};">
+          <div  id="scoreGauge" class="gauge" style="--score: {{ behavior_score }};">
             <span class="gauge-value">{{ behavior_score }}<sup>%</sup></span>
           </div>
           <span class="gauge-label">Behavior Match Score</span>
@@ -967,11 +79,11 @@
           </div>
           <div class="card-value">
             {% if risk_level | upper == 'LOW' %}
-            <span class="badge badge-low">{{ risk_level }}</span>
+            <span  id="liveRisk" class="badge badge-low">{{ risk_level }}</span>
             {% elif risk_level | upper == 'MEDIUM' %}
-            <span class="badge badge-medium">{{ risk_level }}</span>
+            <span id="liveRisk" class="badge badge-medium">{{ risk_level }}</span>
             {% else %}
-            <span class="badge badge-high">{{ risk_level }}</span>
+            <span id="liveRisk" class="badge badge-high">{{ risk_level }}</span>
             {% endif %}
           </div>
           <div class="card-sub">Composite behavioral risk score</div>
@@ -991,7 +103,7 @@
           <div class="card-label">
             <span class="card-icon"></span> Hold Time
           </div>
-          <div class="card-value">
+          <div  id="liveHoldTime" class="card-value">
             {{ hold_time }}<span class="unit">ms</span>
           </div>
           <div class="card-sub">Avg. key press duration</div>
@@ -1002,7 +114,7 @@
           <div class="card-label">
             <span class="card-icon"></span> Flight Time
           </div>
-          <div class="card-value">
+          <div id="liveFlightTime" class="card-value">
             {{ flight_time }}<span class="unit">ms</span>
           </div>
           <div class="card-sub">Avg. time between keystrokes</div>
@@ -1013,7 +125,7 @@
           <div class="card-label">
             <span class="card-icon"></span> Typing Speed
           </div>
-          <div class="card-value">
+          <div id="liveTypingSpeed" class="card-value">
             {{ typing_speed }}<span class="unit">keys/s</span>
           </div>
           <div class="card-sub">Avg. typing rate this session</div>
@@ -1024,7 +136,7 @@
           <div class="card-label">
             <span class="card-icon"></span> Behavior Match Score
           </div>
-          <div class="card-value">
+          <div  id="liveTrustScore" class="card-value">
             {{ behavior_score }}<span class="unit">%</span>
           </div>
           <div class="card-sub">Similarity to enrolled baseline</div>
@@ -1037,54 +149,92 @@
           </div>
           <div class="card-value">
             {% if ml_prediction | upper == 'NORMAL' %}
-            <span class="badge badge-low">{{ ml_prediction }}</span>
+            <span  id="livePrediction" class="badge badge-low">{{ ml_prediction }}</span>
             {% else %}
-            <span class="badge badge-high">{{ ml_prediction }}</span>
+            <span id="livePrediction" class="badge badge-high">{{ ml_prediction }}</span>
             {% endif %}
           </div>
           <div class="card-sub">Predicted behavior pattern</div>
         </div>
       </div>
+
+      <!-- Behavior Score Trend -->
+
+      <!-- ============================================================
+     ANALYTICS VISUALIZATION SECTION
+     Replace the existing analytics-grid div + chart-section
+     with this block. Paste directly after the closing </div>
+     of the metric card .grid and before the .telemetry div.
+     ============================================================ -->
+
+      <!-- ── Summary stat cards (unchanged layout, CSS polished below) ── -->
       <div class="analytics-grid">
         <div class="analytics-card">
-          <span class="analytics-title">TOTAL LOGINS</span>
-          <h2>{{ total_logins }}</h2>
+          <span class="analytics-title">Total Logins</span>
+          <h2 class="analytics-value">{{ total_logins }}</h2>
         </div>
-
         <div class="analytics-card">
-          <span class="analytics-title">AVERAGE SCORE</span>
-          <h2>{{ average_score }}%</h2>
+          <span class="analytics-title">Average Score</span>
+          <h2 class="analytics-value">
+            {{ average_score }}<span class="analytics-unit">%</span>
+          </h2>
         </div>
-
         <div class="analytics-card">
-          <span class="analytics-title">HIGHEST SCORE</span>
-          <h2>{{ highest_score }}%</h2>
+          <span class="analytics-title">Highest Score</span>
+          <h2 class="analytics-value analytics-value--good">
+            {{ highest_score }}<span class="analytics-unit">%</span>
+          </h2>
         </div>
-
         <div class="analytics-card">
-          <span class="analytics-title">LOWEST SCORE</span>
-          <h2>{{ lowest_score }}%</h2>
+          <span class="analytics-title">Lowest Score</span>
+          <h2 class="analytics-value analytics-value--risk">
+            {{ lowest_score }}<span class="analytics-unit">%</span>
+          </h2>
         </div>
       </div>
 
-      <!-- Behavior Score Trend -->
-      <section class="chart-section">
-        <h2 class="section-title">Behavior Score Trend</h2>
-
-        <div class="chart-card">
-          <div class="chart-header">
-            <h2 class="chart-title">Behavior Score Trend</h2>
-            <div class="chart-badge">
-              <span class="chart-badge-dot"></span>
-              Live
+      <!-- ── Dual-chart row ── -->
+      <div class="viz-row">
+        <!-- LEFT: Behavior Score Trend -->
+        <div class="viz-card" id="viz-trend">
+          <div class="viz-header">
+            <div class="viz-header-left">
+              <span class="viz-title">Behavior Score Trend</span>
+              <span class="viz-subtitle"
+                >Authentication confidence over time</span
+              >
             </div>
+            <div class="viz-badge"><span class="viz-badge-dot"></span>Live</div>
           </div>
-
-          <div class="chart-wrap">
+          <div class="viz-chart-wrap">
             <canvas id="scoreChart"></canvas>
+            <!-- Custom tooltip rendered by JS -->
           </div>
         </div>
-      </section>
+
+        <!-- RIGHT: Risk Distribution -->
+        <div class="viz-card" id="viz-risk">
+          <div class="viz-header">
+            <div class="viz-header-left">
+              <span class="viz-title">Risk Distribution</span>
+              <span class="viz-subtitle"
+                >Login attempts by risk classification</span
+              >
+            </div>
+          </div>
+          <div class="viz-donut-wrap">
+            <!-- Center label shown inside the ring, updated by JS -->
+            <div class="viz-donut-center" id="donutCenter">
+              <span class="viz-donut-pct" id="donutPct">—</span>
+              <span class="viz-donut-lbl" id="donutLbl">Dominant</span>
+            </div>
+            <canvas id="riskChart"></canvas>
+          </div>
+          <!-- Custom legend replacing Chart.js default -->
+          <div class="viz-legend" id="riskLegend"></div>
+        </div>
+      </div>
+      <!-- ── end .viz-row ── -->
       <!-- ==============================================================
        AMBIENT TELEMETRY STRIP (decorative, echoes login/register motif)
        ============================================================== -->
@@ -1142,6 +292,97 @@
             </div>
           </div>
         </div>
+      </div>
+      <br />
+      <!-- ==============================================================
+      CONTINUOUS SESSION VERIFICATION
+      ============================================================== -->
+
+      <h2 class="section-title">Continuous Session Verification</h2>
+
+      <div class="telemetry continuous-monitor">
+        <div class="telemetry-header">
+          <span class="section-title" style="margin: 0">
+            Behavioral Monitoring
+          </span>
+
+          <span class="session-pill" id="monitorStatus">
+            Monitoring Active
+          </span>
+        </div>
+
+        <p class="monitor-text">
+          To continuously verify your identity, type the sentence below. Your
+          typing behavior will be compared with your enrolled profile.
+        </p>
+
+        <div class="monitor-box">
+          <label class="monitor-label"> Verification Phrase </label>
+
+          <div class="monitor-phrase">
+            The quick brown fox jumps over the lazy dog.
+          </div>
+
+          <textarea
+            id="verificationInput"
+            class="monitor-input"
+            placeholder="Start typing here..."
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="monitor-footer">
+
+    <div class="monitor-stats">
+
+        <div class="monitor-stat">
+            <span class="readout-label">Live Behavior Score</span>
+            <div class="card-value" id="liveTrustScore">
+                {{ behavior_score }}<span class="unit">%</span>
+            </div>
+        </div>
+
+        <div class="monitor-stat">
+            <span class="readout-label">Last Verification</span>
+            <div class="card-value" id="lastVerification">
+                --
+            </div>
+        </div>
+
+        <div class="monitor-stat">
+            <span class="readout-label">Current Status</span>
+
+            <span
+                id="livePrediction"
+                class="status-badge">
+                Waiting...
+            </span>
+
+        </div>
+
+        <div class="monitor-stat">
+            <span class="readout-label">Risk Level</span>
+
+            <span
+                id="liveRisk"
+                class="status-badge">
+                --
+            </span>
+
+        </div>
+
+    </div>
+
+    <button
+        id="verifySessionBtn"
+        class="logout-btn"
+        type="button">
+
+        Verify Behavior
+
+    </button>
+
+</div>
       </div>
 
       <!-- ============================================================================
@@ -1241,180 +482,20 @@
         CONTINUOUS BEHAVIORAL MONITORING ACTIVE — SESSION SECURED BY BBA-PATP
       </div>
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <script>
-      document.querySelectorAll(".soc-score-fill").forEach((bar) => {
-        const score = parseFloat(bar.dataset.score) || 0;
-        bar.style.width = score + "%";
-      });
-
-      (function () {
-        /* -------------------------------------------------------------------
-           DATA — Jinja injects the arrays; JSON.parse keeps them as native JS arrays
-           even when the template is rendered server-side.
-           ------------------------------------------------------------------- */
-        const labels = {{ chart_labels | tojson }};
-        const values = {{ chart_scores | tojson }};
-
-        /* -------------------------------------------------------------------
-           DESIGN TOKENS — mirror CSS custom properties so the chart matches the
-           rest of the dashboard exactly without reading computed styles.
-           ------------------------------------------------------------------- */
-        const T = {
-          cyan: "#34e5c4",
-          cyanDim: "#1f8f7c",
-          cyanFaint: "rgba(52, 229, 196, 0.12)",
-          cyanFill0: "rgba(52, 229, 196, 0.18)",
-          cyanFillN: "rgba(52, 229, 196, 0.00)",
-          line: "#1f2a35",
-          textDim: "#8b98a5",
-          panel: "#10151c",
-          mono: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace',
-        };
-
-        /* -------------------------------------------------------------------
-           GRADIENT FILL — cyan at the line fading to transparent at the base,
-           giving the area-under-the-line a SOC-scanner feeling.
-           ------------------------------------------------------------------- */
-        const canvas = document.getElementById("scoreChart");
-        const ctx = canvas.getContext("2d");
-        const areaGradient = ctx.createLinearGradient(0, 0, 0, 200);
-        areaGradient.addColorStop(0, T.cyanFill0);
-        areaGradient.addColorStop(1, T.cyanFillN);
-
-        /* -------------------------------------------------------------------
-           CUSTOM TOOLTIP ELEMENT — positioned by the plugin below.
-           ------------------------------------------------------------------- */
-        const tooltipEl = document.createElement("div");
-        tooltipEl.className = "chart-tooltip";
-        tooltipEl.style.opacity = "0";
-        canvas.parentNode.appendChild(tooltipEl);
-
-        const externalTooltip = (context) => {
-          const { chart, tooltip } = context;
-
-          if (tooltip.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
-          const point = tooltip.dataPoints[0];
-          const label = tooltip.title[0] || "";
-          const value = point ? point.formattedValue : "";
-
-          tooltipEl.innerHTML =
-            '<div class="chart-tooltip-time">' +
-            label +
-            "</div>" +
-            '<div class="chart-tooltip-value">' +
-            value +
-            "%</div>";
-
-          const pos = chart.canvas.getBoundingClientRect();
-          const x = tooltip.caretX;
-          const y = tooltip.caretY;
-
-          tooltipEl.style.left = x + "px";
-          tooltipEl.style.top = y + "px";
-          tooltipEl.style.opacity = "1";
-        };
-
-        /* -------------------------------------------------------------------
-           CHART INSTANCE
-           ------------------------------------------------------------------- */
-        new Chart(ctx, {
-          type: "line",
-          data: {
-            labels,
-            datasets: [
-              {
-                data: values,
-                borderColor: T.cyan,
-                borderWidth: 2,
-                pointRadius: 3,
-                pointHoverRadius: 5,
-                pointBackgroundColor: T.panel,
-                pointBorderColor: T.cyan,
-                pointBorderWidth: 2,
-                pointHoverBackgroundColor: T.cyan,
-                pointHoverBorderColor: T.cyan,
-                fill: true,
-                backgroundColor: areaGradient,
-                tension: 0.30,
-                /* smooth bezier, matches the screenshot */
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-              duration: 600,
-              easing: "easeInOutQuart",
-            },
-            interaction: {
-              mode: "index",
-              intersect: false,
-            },
-            plugins: {
-              legend: {
-                display: false,
-              },
-              /* no legend — clean SOC look */
-              tooltip: {
-                enabled: false,
-                /* replaced by custom tooltip above */
-                external: externalTooltip,
-              },
-            },
-            scales: {
-              x: {
-                border: {
-                  display: false,
-                },
-                grid: {
-                  color: T.line,
-                  lineWidth: 1,
-                  drawTicks: false,
-                },
-                ticks: {
-                  color: T.textDim,
-                  font: {
-                    family: T.mono,
-                    size: 10,
-                  },
-                  maxRotation: 0,
-                  padding: 8,
-                  /* show at most 6 labels to avoid crowding on small screens */
-                  maxTicksLimit: 6,
-                },
-              },
-              y: {
-                min: 0,
-                suggestedMax:100,
-                border: {
-                  display: false,
-                },
-                grid: {
-                  color: T.line,
-                  lineWidth: 1,
-                  drawTicks: false,
-                },
-                ticks: {
-                  color: T.textDim,
-                  font: {
-                    family: T.mono,
-                    size: 10,
-                  },
-                  padding: 10,
-                  stepSize: 20,
-                  callback: (v) => (v === 0 ? "0" : v),
-                },
-              },
-            },
-          },
-        });
-      })();
+    <script id="chart-data-labels" type="application/json">
+      {{ chart_labels | tojson }}
     </script>
-  </body>
+    <script id="chart-data-values" type="application/json">
+      {{ chart_scores | tojson }}
+    </script>
+    <script id="risk-data-labels" type="application/json">
+      {{ risk_labels | tojson }}
+    </script>
+    <script id="risk-data-values" type="application/json">
+      {{ risk_values | tojson }}
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/behavior.js') }}"></script>
+    
 </html>

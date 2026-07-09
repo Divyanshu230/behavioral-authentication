@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Authentication System | Behavioral Biometrics</title>
+
+    <!-- Fonts: JetBrains Mono for the SOC/telemetry feel, Inter for body copy -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/home.css') }}"
+    />
+  </head>
+  <body>
+    <!-- Ambient animated backdrop, drawn/controlled entirely by home.js -->
+    <canvas id="signal-grid"></canvas>
+
+    <!-- ============ NAVIGATION ============ -->
+    <nav class="navbar" id="navbar">
+      <div class="nav-inner">
+        <a href="#top" class="nav-logo">
+          <span class="logo-dot"></span>
+          <span class="logo-text"
+            >BBA&#8209;PATP
+            <span class="logo-sub">// BEHAVIORAL AUTH</span></span
+          >
+        </a>
+
+        <button
+          class="nav-toggle"
+          id="navToggle"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <div class="nav-links" id="navLinks">
+          <a href="#top" class="nav-link active-link">Home</a>
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#about" class="nav-link">About</a>
+          <a href="/login" class="nav-link">Login</a>
+          <a href="/register" class="nav-btn">Register</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ============ HERO ============ -->
+    <header class="hero" id="top">
+      <div class="hero-inner">
+        <p class="eyebrow">
+          <span class="pulse-dot"></span> SYSTEM ONLINE // CONTINUOUS BEHAVIORAL
+          MONITORING
+        </p>
+
+        <h1 class="hero-title">
+          Smart Authentication System using
+          <span class="accent-text">Behavioral Biometrics</span>
+          &amp; Machine Learning
+        </h1>
+
+        <p class="hero-subtitle">
+          A next-generation identity layer that verifies <em>how</em> you type,
+          not just what you type. Keystroke dynamics&mdash;hold time, flight
+          time, and typing rhythm&mdash;are captured in real time and scored
+          against your enrolled baseline using a trained ML model, giving every
+          session a live, continuous authentication confidence score.
+        </p>
+
+        <div class="hero-cta">
+          <a href="/login" class="btn btn-primary">
+            Login <span class="btn-arrow">&rarr;</span>
+          </a>
+          <a href="/register" class="btn btn-ghost">Register</a>
+        </div>
+
+        <!-- Live telemetry strip echoing the dashboard's data-card language -->
+        <div class="hero-telemetry">
+          <div class="telemetry-chip">
+            <span class="chip-label">MODEL</span>
+            <span class="chip-value">Random Forest / SVM</span>
+          </div>
+          <div class="telemetry-chip">
+            <span class="chip-label">SIGNAL</span>
+            <span class="chip-value">Hold &amp; Flight Time</span>
+          </div>
+          <div class="telemetry-chip">
+            <span class="chip-label">MODE</span>
+            <span class="chip-value status-live"
+              ><span class="pulse-dot small"></span> Continuous</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Decorative live score ring, mirrors the dashboard's "Behavior Match Score" ring -->
+      <div class="hero-ring-wrap" aria-hidden="true">
+        <svg class="hero-ring" viewBox="0 0 200 200">
+          <circle class="ring-track" cx="100" cy="100" r="86"></circle>
+          <circle
+            class="ring-progress"
+            id="ringProgress"
+            cx="100"
+            cy="100"
+            r="86"
+          ></circle>
+        </svg>
+        <div class="ring-center">
+          <span class="ring-score" id="ringScore"
+            >0.0<span class="ring-percent">%</span></span
+          >
+          <span class="ring-label">BEHAVIOR MATCH</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ FEATURES ============ -->
+    <section class="section" id="features">
+      <div class="section-inner">
+        <p class="section-eyebrow">AUTHENTICATION TELEMETRY</p>
+        <h2 class="section-title">What the system watches</h2>
+        <p class="section-lede">
+          Six signal groups feed the model that decides whether "you" are really
+          you.
+        </p>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon" data-icon="keystroke"></div>
+            <h3>Keystroke Dynamics</h3>
+            <p>
+              Captures hold time and flight time for every keypress to build a
+              rhythm signature unique to each user.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" data-icon="mouse"></div>
+            <h3>Mouse Movement Analysis</h3>
+            <p>
+              Tracks cursor velocity, acceleration, and click cadence as a
+              secondary behavioral channel.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" data-icon="ml"></div>
+            <h3>Machine Learning Authentication</h3>
+            <p>
+              A trained classifier compares live session data against an
+              enrolled baseline in real time.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" data-icon="score"></div>
+            <h3>Behavior Score Analysis</h3>
+            <p>
+              Produces a single composite match score, the same metric shown
+              live on the user dashboard.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" data-icon="risk"></div>
+            <h3>Risk Detection</h3>
+            <p>
+              Flags anomalous sessions and classifies each login attempt as low,
+              medium, or high risk.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" data-icon="continuous"></div>
+            <h3>Continuous Authentication</h3>
+            <p>
+              Monitoring doesn't stop at login&mdash;behavior is re-verified for
+              the full duration of the session.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section class="section section-alt" id="how-it-works">
+      <div class="section-inner">
+        <p class="section-eyebrow">PIPELINE</p>
+        <h2 class="section-title">How it works</h2>
+        <p class="section-lede">
+          From enrollment to a live authentication decision, in four connected
+          stages.
+        </p>
+
+        <div class="steps-track">
+          <div class="step-card">
+            <span class="step-index">01</span>
+            <h3>Register</h3>
+            <p>
+              User creates an account and enrolls an initial behavioral
+              baseline.
+            </p>
+          </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step-card">
+            <span class="step-index">02</span>
+            <h3>Capture Behavioral Data</h3>
+            <p>
+              Keystroke and mouse signals are recorded during every login
+              attempt.
+            </p>
+          </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step-card">
+            <span class="step-index">03</span>
+            <h3>Machine Learning Analysis</h3>
+            <p>
+              The captured signal is scored against the enrolled baseline by the
+              ML model.
+            </p>
+          </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step-card">
+            <span class="step-index">04</span>
+            <h3>Secure Authentication</h3>
+            <p>
+              A verified, low-risk session is granted&mdash;and continuously
+              re-checked.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TECH STACK ============ -->
+    <section class="section" id="stack">
+      <div class="section-inner">
+        <p class="section-eyebrow">BUILT WITH</p>
+        <h2 class="section-title">Technology stack</h2>
+
+        <div class="stack-grid">
+          <div class="stack-card">
+            <span class="stack-name">Python</span
+            ><span class="stack-role">Core Logic</span>
+          </div>
+          <div class="stack-card">
+            <span class="stack-name">Flask</span
+            ><span class="stack-role">Backend / Routing</span>
+          </div>
+          <div class="stack-card">
+            <span class="stack-name">SQLite</span
+            ><span class="stack-role">Data Storage</span>
+          </div>
+          <div class="stack-card">
+            <span class="stack-name">Scikit-learn</span
+            ><span class="stack-role">ML Model</span>
+          </div>
+          <div class="stack-card">
+            <span class="stack-name">HTML</span
+            ><span class="stack-role">Structure</span>
+          </div>
+          <div class="stack-card">
+            <span class="stack-name">CSS</span
+            ><span class="stack-role">Interface</span>
+          </div>
+          <div class="stack-card">
+            <span class="stack-name">JavaScript</span
+            ><span class="stack-role">Interactivity</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section class="section section-alt" id="about">
+      <div class="section-inner about-inner">
+        <p class="section-eyebrow">ABOUT THE PROJECT</p>
+        <h2 class="section-title">A biometric layer built on how you type</h2>
+
+        <div class="about-text">
+          <p>
+            Traditional authentication relies on something a user knows or
+            holds&mdash;a password, an OTP, a token&mdash;none of which prove
+            that the person entering it is actually the enrolled user. This
+            project,
+            <strong
+              >Smart Authentication System using Behavioral Biometrics and
+              Machine Learning</strong
+            >, addresses that gap by treating typing rhythm itself as a
+            credential. Every login attempt is captured as a stream of keystroke
+            timings, converted into hold-time and flight-time features, and
+            passed through a trained classifier that outputs a behavior match
+            score.
+          </p>
+          <p>
+            The system is built end-to-end on a Python and Flask backend, with
+            SQLite handling session and user telemetry, and Scikit-learn
+            powering the underlying model that distinguishes an enrolled user's
+            typical rhythm from an impostor's. Authentication does not end at
+            login: the same signal pipeline continues to sample behavior for the
+            duration of the session, allowing the system to flag and respond to
+            risk in real time rather than only at the point of entry.
+          </p>
+          <p>
+            Developed as a final-year Bachelor of Engineering major project in
+            Electronics and Communication Engineering, the system demonstrates
+            how lightweight behavioral signals, combined with a modest machine
+            learning pipeline, can meaningfully strengthen conventional
+            authentication without adding friction for the legitimate user.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="logo-dot"></span>
+          <span class="logo-text"
+            >BBA&#8209;PATP
+            <span class="logo-sub">// SIGNAL MONITOR</span></span
+          >
+        </div>
+
+        <div class="footer-meta">
+          <p class="footer-project">
+            Smart Authentication System using Behavioral Biometrics and Machine
+            Learning
+          </p>
+          <p class="footer-dev">
+            Developed by <strong>Divyanshu Anand</strong>
+          </p>
+        </div>
+
+        <div class="footer-links">
+          <a href="#" class="footer-link" target="_blank" rel="noopener"
+            >GitHub</a
+          >
+          <a href="#" class="footer-link" target="_blank" rel="noopener"
+            >LinkedIn</a
+          >
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>
+          &copy; <span id="footerYear"></span> BBA&#8209;PATP. All rights
+          reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+  </body>
+</html>

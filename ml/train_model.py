@@ -58,18 +58,34 @@ model = IsolationForest(
 
 model.fit(X)
 
+# ------------------------------------
+# Calculate decision score range
+# ------------------------------------
+
+decision_scores = model.decision_function(X)
+
+score_min = decision_scores.min()
+score_max = decision_scores.max()
+
+print("Decision Score Range")
+print("Min:", score_min)
+print("Max:", score_max)
+
 
 # ------------------------------------
 # Save trained model
 # ------------------------------------
 
 joblib.dump(
-
-    model,
-
+    {
+        "model": model,
+        "score_min": score_min,
+        "score_max": score_max
+    },
     "ml/behavior_model.pkl"
-
 )
+print("Min:", score_min)
+print("Max:", score_max)
 
 print("✅ Machine Learning model trained successfully!")
 

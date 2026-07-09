@@ -12,9 +12,17 @@ Responsibilities of this module:
 
 Compatible with Python 3.12.
 """
+from multiprocessing import connection
+from multiprocessing import connection
 from tkinter.tix import MAX
 
-from ml.evaluate_model import predict_behavior
+from ml.evaluate_model import (
+    predict_behavior,
+    calculate_similarity_score,
+    calculate_ml_confidence,
+    calculate_behavior_score,
+    calculate_risk_level
+)
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import os
@@ -32,6 +40,16 @@ from flask import (
 from flask_bcrypt import Bcrypt
 
 from config import BASE_DIR, Config
+from flask import request, jsonify
+import random
+
+# ==========================================
+# Authentication Configuration
+# ==========================================
+
+MIN_BEHAVIOR_SCORE = 60
+
+
 
 # ----------------------------------------------------------------------------
 # PATH CONSTANTS
@@ -117,12 +135,30 @@ def create_app():
 
     @app.route("/")
     def index():
-        return "Behavioral Biometric Authentication System Running Successfully!"
+        return render_template("home.html")
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
         if request.method == "GET":
             return render_template("register.html")
+        
+        hold_time = float(request.form.get("hold_time", 0))
+        flight_time = float(request.form.get("flight_time", 0))
+        typing_speed = float(request.form.get("typing_speed", 0))
+        
+        if flight_time > 600:
+            flash(
+                "Typing sample is inconsistent. Please type naturally and try again.",
+                "error"
+            )
+            return redirect(url_for("register"))
+
+        if typing_speed < 2:
+            flash(
+                "Typing speed is too slow. Please register again.",
+                "error"
+            )
+            return redirect(url_for("register"))
 
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip()
@@ -267,45 +303,79 @@ def create_app():
         finally:
             connection.close()
 
+        # =====================================================
+        # Calculate Similarity Score
+        # =====================================================
+
         if profile:
-            hold_diff = abs(
-                float(profile["avg_hold_time"]) - hold_time
+            similarity_score = calculate_similarity_score(
+                hold_time,
+                flight_time,
+                typing_speed,
+                float(profile["avg_hold_time"]),
+                float(profile["avg_flight_time"]),
+                float(profile["avg_typing_speed"])
             )
-
-            flight_diff = abs(
-                float(profile["avg_flight_time"]) - flight_time
-            )
-
-            speed_diff = abs(
-                float(profile["avg_typing_speed"]) - typing_speed
-            )
-
-            score = 100 - (
-                hold_diff * 0.2 +
-                flight_diff * 0.05 +
-                speed_diff * 10
-            )
-
-            score = max(0, min(100, score))
-
         else:
-            score = 50
+            similarity_score = 50
 
-        if score >= 80:
-            risk = "LOW"
-        elif score >= 60:
-            risk = "MEDIUM"
-        else:
-            risk = "HIGH"
+        # =====================================================
+        # Isolation Forest Prediction
+        # =====================================================
 
-        session["user_id"] = user["id"]
-        session["username"] = user["username"]
-        session["behavior_score"] = round(score, 2)
-        ml_prediction = predict_behavior(
+        ml_prediction, decision_score = predict_behavior(
             hold_time,
             flight_time,
             typing_speed
         )
+
+        ml_confidence = calculate_ml_confidence(
+            ml_prediction,
+            decision_score
+        )
+
+        # =====================================================
+        # Final Behavior Score
+        # =====================================================
+
+        behavior_score = calculate_behavior_score(
+            similarity_score,
+            ml_confidence
+        )
+
+        # =====================================================
+        # Risk Level
+        # =====================================================
+
+        risk = calculate_risk_level(
+            behavior_score
+        )
+        print("\n========== LOGIN ANALYSIS ==========")
+        print("Similarity Score :", similarity_score)
+        print("ML Prediction    :", ml_prediction)
+        print("Decision Score   :", decision_score)
+        print("ML Confidence    :", ml_confidence)
+        print("Behavior Score   :", behavior_score)
+        print("Risk Level       :", risk)
+        print("===================================\n")
+
+
+        # ----------------------------------------
+        # Block suspicious logins
+        # ----------------------------------------
+        if behavior_score < MIN_BEHAVIOR_SCORE:
+            flash(
+                f"Login blocked. Behavior score ({behavior_score:.2f}%) is below the minimum required score ({MIN_BEHAVIOR_SCORE}%).",
+                "error"
+            )
+            return redirect(url_for("login"))
+
+        session["user_id"] = user["id"]
+        session["username"] = user["username"]
+        session["behavior_score"] = behavior_score
+        session["similarity_score"] = similarity_score
+        session["ml_confidence"] = ml_confidence
+       
 
         session["ml_prediction"] = (
             "Normal"
@@ -321,6 +391,51 @@ def create_app():
             "%d-%b-%Y %H:%M:%S"
         )
         connection = get_db_connection()
+
+        # ==========================================
+        # Adaptive Profile Update
+        # ==========================================
+
+        new_hold = (
+            float(profile["avg_hold_time"]) * 0.8 +
+            hold_time * 0.2
+        )
+
+        new_flight = (
+            float(profile["avg_flight_time"]) * 0.8 +
+            flight_time * 0.2
+        )
+
+        new_speed = (
+            float(profile["avg_typing_speed"]) * 0.8 +
+            typing_speed * 0.2
+        )
+
+        connection.execute(
+            """
+            UPDATE behavior_profiles
+            SET
+                avg_hold_time = ?,
+                avg_flight_time = ?,
+                avg_typing_speed = ?
+            WHERE user_id = ?
+            """,
+            (
+                round(new_hold, 2),
+                round(new_flight, 2),
+                round(new_speed, 2),
+                user["id"]
+            )
+        )
+
+        print("\n===== PROFILE UPDATED =====")
+        print("Old Hold :", profile["avg_hold_time"])
+        print("New Hold :", round(new_hold, 2))
+        print("Old Flight :", profile["avg_flight_time"])
+        print("New Flight :", round(new_flight, 2))
+        print("Old Speed :", profile["avg_typing_speed"])
+        print("New Speed :", round(new_speed, 2))
+        print("===========================\n")
 
         try:
             login_time = datetime.now(
@@ -342,7 +457,7 @@ def create_app():
                 (
                     user["id"],
                     login_time,
-                    round(score, 2),
+                    behavior_score,
                     risk,
                     "SUCCESS",
                     request.remote_addr
@@ -354,15 +469,10 @@ def create_app():
         finally:
             connection.close()
 
-        if score < 60:
-            flash(
-                f"Login blocked. Suspicious behavior detected. Score: {score:.2f}%",
-                "error"
-            )
-            return redirect(url_for("login"))
+        
 
         flash(
-            f"Behavior Match Score: {score:.2f}%",
+            f"Behavior Match Score: {behavior_score:.2f}%",
             "success"
         )
 
@@ -403,6 +513,25 @@ def create_app():
                 """,
                 (session["user_id"],)
             ).fetchall()
+            risk_counts = connection.execute(
+                """
+                SELECT
+                    risk_level,
+                    COUNT(*) as total
+                FROM login_history
+                WHERE user_id = ?
+                GROUP BY risk_level
+                """,
+                (session["user_id"],)
+            ).fetchall()
+
+            risk_labels = []
+            risk_values = []
+
+            for row in risk_counts:
+                risk_labels.append(row["risk_level"])
+                risk_values.append(row["total"])
+
             total_logins, average_score, highest_score, lowest_score = connection.execute(
                 """
             SELECT
@@ -450,7 +579,93 @@ def create_app():
             lowest_score=lowest_score,
             chart_labels=chart_labels,
             chart_scores=chart_scores,
+            risk_labels=risk_labels,
+            risk_values=risk_values
         )
+
+    @app.route("/continuous_check", methods=["POST"])
+    def continuous_check():
+
+        data = request.get_json()
+
+        hold_time = float(data.get("hold_time", 0))
+        flight_time = float(data.get("flight_time", 0))
+        typing_speed = float(data.get("typing_speed", 0))
+
+        connection = get_db_connection()
+
+        profile = connection.execute(
+            """
+            SELECT
+            avg_hold_time,
+            avg_flight_time,
+            avg_typing_speed
+            FROM behavior_profiles
+            WHERE user_id = ?
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (session["user_id"],)
+        ).fetchone()
+
+        connection.close()
+
+        similarity_score = calculate_similarity_score(
+            hold_time,
+            flight_time,
+            typing_speed,
+            float(profile["avg_hold_time"]),
+            float(profile["avg_flight_time"]),
+            float(profile["avg_typing_speed"])
+        )
+        if not profile:
+            return jsonify({
+                "error": "Behavior profile not found"
+            }), 400
+
+        ml_prediction , decision_score = predict_behavior(
+            hold_time,
+            flight_time,
+            typing_speed
+        )
+        ml_confidence = calculate_ml_confidence(
+            ml_prediction,
+            decision_score
+        )
+        behavior_score = calculate_behavior_score(
+            similarity_score,
+            ml_confidence
+        )
+        risk = calculate_risk_level(
+            behavior_score
+        )
+
+        prediction_text = (
+            "Normal" if ml_prediction == 1 else "Anomaly"
+        )
+        print("\n====== CONTINUOUS CHECK ======")
+        print("Hold:", hold_time)
+        print("Flight:", flight_time)
+        print("Speed:", typing_speed)
+        print("Similarity:", similarity_score)
+        print("ML Prediction:", ml_prediction)
+        print("Decision Score:", decision_score)
+        print("ML Confidence:", ml_confidence)
+        print("Behavior Score:", behavior_score)
+        print("Risk:", risk)
+        print("==============================\n")
+        
+
+        return jsonify({
+            "behavior_score": behavior_score,
+            "prediction": prediction_text,
+            "risk_level": risk,
+            "hold_time": round(hold_time, 2),
+            "flight_time": round(flight_time, 2),
+            "typing_speed": round(typing_speed, 2),
+            "similarity_score": round(similarity_score, 2),
+            "ml_confidence": round(ml_confidence, 2)
+        })
 
     return app
 

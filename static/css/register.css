@@ -1,0 +1,435 @@
+
+      /* ==========================================================================
+     DESIGN TOKENS
+     A self-contained dark, instrument-panel aesthetic built around the idea
+     of "reading a signal": deep near-black ground, a cyan biometric-scan
+     accent for live/active states, and an amber accent reserved for warnings
+     (flash "error" messages). Typography leans on system monospace for data
+     and labels (the vocabulary of telemetry) paired with system sans for
+     human-readable copy.
+     ========================================================================== */
+      :root {
+        --bg: #0a0e13;
+        --panel: #10151c;
+        --panel-2: #141b24;
+        --line: #1f2a35;
+        --text: #e6edf3;
+        --text-dim: #8b98a5;
+        --cyan: #34e5c4;
+        --cyan-dim: #1f8f7c;
+        --amber: #ffb454;
+        --amber-dim: #7a5326;
+        --radius: 10px;
+        --font-sans:
+          -apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial,
+          sans-serif;
+        --font-mono:
+          ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo,
+          Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
+        min-height: 100%;
+      }
+
+      body {
+        background-image:
+          radial-gradient(
+            circle at 15% 20%,
+            rgba(52, 229, 196, 0.05),
+            transparent 45%
+          ),
+          radial-gradient(
+            circle at 85% 80%,
+            rgba(52, 229, 196, 0.04),
+            transparent 50%
+          );
+      }
+
+      a {
+        color: var(--cyan);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* Visible keyboard focus everywhere, per accessibility floor. */
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 2px;
+      }
+
+      /* ==========================================================================
+     LAYOUT — split shell: telemetry panel (left) + enrollment form (right)
+     ========================================================================== */
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      /* ---- Left: ambient signal / telemetry panel (decorative, hidden on mobile) */
+      .signal-panel {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 48px 44px;
+        background: linear-gradient(180deg, var(--panel) 0%, #0c1118 100%);
+        border-right: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+      }
+
+      .brand .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--cyan);
+        box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.6);
+        animation: pulse-dot 2.4s ease-out infinite;
+        flex-shrink: 0;
+      }
+
+      @keyframes pulse-dot {
+        0% {
+          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0.5);
+        }
+        70% {
+          box-shadow: 0 0 0 8px rgba(52, 229, 196, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(52, 229, 196, 0);
+        }
+      }
+
+      .signal-copy h1 {
+        font-size: 30px;
+        line-height: 1.25;
+        margin: 0 0 14px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .signal-copy p {
+        font-size: 14.5px;
+        line-height: 1.6;
+        color: var(--text-dim);
+        max-width: 380px;
+        margin: 0;
+      }
+
+      /* Ambient telemetry readout — purely atmospheric, communicates "the system
+     is always listening" without claiming to show real enrollment data. */
+      .readout {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 36px;
+      }
+
+      .readout-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .readout-label {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.07em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+      }
+
+      .bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 22px;
+      }
+
+      .bars span {
+        flex: 1;
+        background: var(--cyan-dim);
+        border-radius: 1px;
+        animation: bar-pulse 1.8s ease-in-out infinite;
+      }
+
+      @keyframes bar-pulse {
+        0%,
+        100% {
+          height: 20%;
+          background: var(--cyan-dim);
+        }
+        50% {
+          height: 90%;
+          background: var(--cyan);
+        }
+      }
+
+      .signal-footer {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        letter-spacing: 0.04em;
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+      }
+
+      /* ---- Right: enrollment form */
+      .form-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 24px;
+      }
+
+      .form-card {
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        color: var(--cyan);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      .form-card h2 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 8px;
+        letter-spacing: -0.01em;
+      }
+
+      .form-card .lede {
+        font-size: 14px;
+        color: var(--text-dim);
+        line-height: 1.55;
+        margin: 0 0 28px;
+      }
+
+      /* ---- Flash messages */
+      .flashes {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 22px;
+      }
+
+      .flash {
+        font-size: 13.5px;
+        line-height: 1.5;
+        padding: 11px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        display: flex;
+        gap: 9px;
+        align-items: flex-start;
+      }
+
+      .flash::before {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.5;
+        flex-shrink: 0;
+      }
+
+      .flash-success {
+        background: rgba(52, 229, 196, 0.08);
+        border-color: var(--cyan-dim);
+        color: var(--cyan);
+      }
+      .flash-success::before {
+        content: "[ok]";
+      }
+
+      .flash-error {
+        background: rgba(255, 180, 84, 0.08);
+        border-color: var(--amber-dim);
+        color: var(--amber);
+      }
+      .flash-error::before {
+        content: "[!]";
+      }
+
+      .flash-message {
+        background: rgba(139, 152, 165, 0.08);
+        border-color: var(--line);
+        color: var(--text);
+      }
+      .flash-message::before {
+        content: "[i]";
+        color: var(--text-dim);
+      }
+
+      /* ---- Form fields */
+      .field {
+        margin-bottom: 18px;
+      }
+
+      .field label {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        margin-bottom: 7px;
+      }
+
+      .field input {
+        width: 100%;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px 13px;
+        font-size: 14.5px;
+        font-family: var(--font-sans);
+        color: var(--text);
+        transition:
+          border-color 0.15s ease,
+          background 0.15s ease;
+      }
+
+      .field input::placeholder {
+        color: #5b6573;
+      }
+
+      .field input:hover {
+        border-color: #2c3a47;
+      }
+
+      .field input:focus {
+        border-color: var(--cyan-dim);
+        background: #121821;
+      }
+
+      .field-hint {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+
+      /* ---- Signature element: live keystroke-cadence visualizer.
+     As the user types in the password field, the actual interval between
+     keystrokes is measured and rendered as a bar — a literal, working
+     preview of the behavioral signal this product is built to read. */
+      .cadence {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 26px;
+        margin-top: 9px;
+        padding: 0 1px;
+      }
+
+      .cadence-bar {
+        flex: 1;
+        min-width: 3px;
+        max-width: 7px;
+        height: 12%;
+        background: var(--cyan-dim);
+        border-radius: 1px;
+        transition:
+          height 0.18s ease,
+          background 0.18s ease;
+      }
+
+      .cadence-bar.active {
+        background: var(--cyan);
+      }
+
+      .cadence-label {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        margin-top: 5px;
+      }
+
+      /* ---- Submit */
+      .submit {
+        width: 100%;
+        margin-top: 8px;
+        padding: 13px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--cyan-dim);
+        background: var(--cyan);
+        color: #06120f;
+        font-size: 14.5px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition:
+          filter 0.15s ease,
+          transform 0.05s ease;
+      }
+
+      .submit:hover {
+        filter: brightness(1.08);
+      }
+      .submit:active {
+        transform: translateY(1px);
+      }
+
+      .form-footer {
+        margin-top: 22px;
+        font-size: 13.5px;
+        color: var(--text-dim);
+        text-align: center;
+      }
+
+      /* ==========================================================================
+     RESPONSIVE
+     ========================================================================== */
+      @media (max-width: 860px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+        .signal-panel {
+          display: none;
+        }
+        .form-panel {
+          padding: 56px 22px;
+        }
+      }
+
+      /* Respect reduced-motion preference: stop ambient pulse/bar animation. */
+      @media (prefers-reduced-motion: reduce) {
+        .brand .dot,
+        .bars span,
+        .cadence-bar {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    

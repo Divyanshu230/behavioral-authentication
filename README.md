@@ -1,6 +1,9 @@
 # 🔐 Smart Authentication System using Behavioral Biometrics and Machine Learning
 
 <p align="center">
+  <img src="screenshots/banner.png" alt="Smart Authentication System Banner" width="100%">
+</p>
+<p align="center">
 
 A Flask-based behavioral biometric authentication system that strengthens traditional password authentication using **Keystroke Dynamics**, **Behavioral Biometrics**, and **Machine Learning**.
 

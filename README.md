@@ -1,7 +1,7 @@
 # 🔐 Smart Authentication System using Behavioral Biometrics and Machine Learning
 
 <p align="center">
-  <img src="screenshots/banner.png" alt="Smart Authentication System Banner" width="100%">
+  <img src="screenshots/banner1.png" alt="Smart Authentication System Banner" width="100%">
 </p>
 <p align="center">
 

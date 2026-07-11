@@ -26,8 +26,6 @@ CREATE TABLE IF NOT EXISTS behavior_profiles (
     avg_hold_time        REAL,
     avg_flight_time      REAL,
     avg_typing_speed     REAL,
-    avg_mouse_speed      REAL,
-    avg_click_frequency  REAL,
     created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
  
     CONSTRAINT fk_behavior_profiles_user

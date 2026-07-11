@@ -1271,3 +1271,11 @@
     color:#ff6b81;
 
 }
+.monitor-warning {
+    margin-top: 12px;
+    padding-left: 12px;
+    border-left: 3px solid var(--cyan);
+    color: #98a4b3;
+    font-size: 0.84rem;
+    line-height: 1.6;
+}

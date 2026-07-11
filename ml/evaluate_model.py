@@ -86,16 +86,16 @@ def calculate_similarity_score(
         100 - (
             abs(current_speed - profile_speed)
             / max(profile_speed, 1)
-        ) * 100
+        ) * 50
     )
 
     similarity = (
 
-        hold_similarity * 0.50 +
+        hold_similarity * 0.45 +
 
-        flight_similarity * 0.30 +
+        flight_similarity * 0.45 +
 
-        speed_similarity * 0.20
+        speed_similarity * 0.10
     )
 
     return round(similarity, 2)

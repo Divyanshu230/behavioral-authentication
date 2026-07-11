@@ -275,88 +275,100 @@ document.querySelectorAll('.soc-score-fill').forEach((bar) => {
 ========================================================== */
 
 const verifyBtn = document.getElementById("verifySessionBtn");
+const verificationInput = document.getElementById("verificationInput");
 
-if (verifyBtn) {
+/* Press Enter to Verify */
 
-    verifyBtn.addEventListener("click", async function () {
+if (verificationInput && verifyBtn) {
 
-        if (!window.behaviorData) {
-            alert("Please type the verification phrase first.");
+    verificationInput.addEventListener("keydown", function (event) {
+
+        if (event.key !== "Enter" || event.shiftKey) return;
+
+        event.preventDefault();
+
+        const expected =
+            "The quick brown fox jumps over the lazy dog.";
+
+        if (verificationInput.value.trim() !== expected) {
+
+            alert("Please type the verification phrase exactly as shown.");
+
             return;
-        }
-
-        try {
-
-            const response = await fetch("/continuous_check", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    hold_time: window.behaviorData.avgHold,
-                    flight_time: window.behaviorData.avgFlight,
-                    typing_speed: window.behaviorData.typingSpeed
-                })
-            });
-
-            const result = await response.json();
-            console.log(result);
-            console.log(result.prediction);
-            console.log(result.risk_level);
-
-            document.getElementById("liveHoldTime").textContent =
-                result.hold_time.toFixed(2);
-
-            document.getElementById("liveFlightTime").textContent =
-                result.flight_time.toFixed(2);
-
-            document.getElementById("liveTypingSpeed").textContent =
-                result.typing_speed.toFixed(2);
-
-            document.getElementById("sessionTrustScore").innerHTML =
-                result.behavior_score.toFixed(2) +
-                '<span class="unit">%</span>';
-
-            const prediction = document.getElementById("sessionPrediction");
-            prediction.textContent = result.prediction;
-            prediction.className = "status-badge";
-            prediction.classList.add(
-                result.prediction === "Normal"
-                    ? "status-normal"
-                    : "status-anomaly"
-            );
-
-            const risk = document.getElementById("sessionRisk");
-            risk.textContent = result.risk_level;
-            risk.className = "status-badge";
-            risk.classList.add(
-                result.risk_level === "LOW"
-                    ? "risk-low"
-                    : "risk-high"
-            );
-
-            document.getElementById("lastVerification").textContent =
-                new Date().toLocaleTimeString();
-            // Logout if continuous verification fails
-
-            if (result.behavior_score < 60) {
-
-                alert(
-                      "Suspicious behavior detected.\nYou will be logged out."
-                );
-
-                window.location.href = "/logout";
-            }
-
-            console.log(result);
-
-        } catch (err) {
-
-            console.error(err);
 
         }
+
+        verifyBtn.click();
 
     });
 
+}
+
+if (verifyBtn) {
+  verifyBtn.addEventListener("click", async function () {
+    if (!window.behaviorData) {
+      alert("Please type the verification phrase first.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/continuous_check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          hold_time: window.behaviorData.avgHold,
+          flight_time: window.behaviorData.avgFlight,
+          typing_speed: window.behaviorData.typingSpeed,
+        }),
+      });
+
+      const result = await response.json();
+      console.log(result);
+      console.log(result.prediction);
+      console.log(result.risk_level);
+
+      document.getElementById("liveHoldTime").textContent =
+        result.hold_time.toFixed(2);
+
+      document.getElementById("liveFlightTime").textContent =
+        result.flight_time.toFixed(2);
+
+      document.getElementById("liveTypingSpeed").textContent =
+        result.typing_speed.toFixed(2);
+
+      document.getElementById("sessionTrustScore").innerHTML =
+        result.behavior_score.toFixed(2) + '<span class="unit">%</span>';
+
+      const prediction = document.getElementById("sessionPrediction");
+      prediction.textContent = result.prediction;
+      prediction.className = "status-badge";
+      prediction.classList.add(
+        result.prediction === "Normal" ? "status-normal" : "status-anomaly"
+      );
+
+      const risk = document.getElementById("sessionRisk");
+      risk.textContent = result.risk_level;
+      risk.className = "status-badge";
+      risk.classList.add(
+        result.risk_level === "LOW" ? "risk-low" : "risk-high"
+      );
+
+      document.getElementById("lastVerification").textContent =
+        new Date().toLocaleTimeString();
+      // Logout if continuous verification fails
+
+      if (result.behavior_score < 60) {
+        alert("Suspicious behavior detected.\nYou will be logged out.");
+        window.location.href = "/logout";
+      }
+
+      console.log(result);
+
+    } catch (err) {
+      console.error(err);
+    }
+  });
 }
 })();

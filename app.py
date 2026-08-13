@@ -45,7 +45,7 @@ import random
 # Authentication Configuration
 # ==========================================
 
-MIN_BEHAVIOR_SCORE = 60
+MIN_BEHAVIOR_SCORE = 75  # Minimum behavior score required for successful login
 
 
 
@@ -338,6 +338,9 @@ def create_app():
             similarity_score,
             ml_confidence
         )
+        print("Similarity Score:", similarity_score)
+        print("ML Confidence:", ml_confidence)
+        print("Final Behavior Score:", behavior_score)
 
         # =====================================================
         # Risk Level
@@ -635,6 +638,7 @@ def create_app():
             "similarity_score": round(similarity_score, 2),
             "ml_confidence": round(ml_confidence, 2)
         })
+    
 
     return app
 

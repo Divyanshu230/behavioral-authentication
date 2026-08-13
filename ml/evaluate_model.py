@@ -70,7 +70,7 @@ def calculate_similarity_score(
         100 - (
             abs(current_hold - profile_hold)
             / max(profile_hold, 1)
-        ) * 100
+        ) * 200
     )
 
     flight_similarity = max(
@@ -78,7 +78,7 @@ def calculate_similarity_score(
         100 - (
             abs(current_flight - profile_flight)
             / max(profile_flight, 1)
-        ) * 100
+        ) * 200
     )
 
     speed_similarity = max(
@@ -97,6 +97,10 @@ def calculate_similarity_score(
 
         speed_similarity * 0.10
     )
+    print("Hold Similarity:", round(hold_similarity, 2))
+    print("Flight Similarity:", round(flight_similarity, 2))
+    print("Speed Similarity:", round(speed_similarity, 2))
+    print("Similarity Score:", round(similarity, 2))
 
     return round(similarity, 2)
 
@@ -145,8 +149,8 @@ def calculate_behavior_score(
 ):
 
     score = (
-        similarity_score * 0.85 +
-        ml_confidence * 0.15
+        similarity_score * 0.95 +
+        ml_confidence * 0.05
     )
 
     return round(score, 2)
@@ -160,10 +164,10 @@ def calculate_risk_level(
     behavior_score
 ):
 
-    if behavior_score >= 85:
+    if behavior_score >= 75:
         return "LOW"
 
-    elif behavior_score >= 70:
+    elif behavior_score >= 60:
         return "MEDIUM"
 
     return "HIGH"
